@@ -1,4 +1,7 @@
 # user-thread-lib150
+## Members
+- Abby Boroica
+- Alyssa Rodriguez
 
 # General Info 
 - Due Thursday, November 12th, 2020 at 11:59am via Gradescope.
