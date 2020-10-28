@@ -1,4 +1,4 @@
-# user-thread-ecs150
+# user-thread-lib150
 
 # General Info 
 - Due Thursday, November 12th, 2020 at 11:59am via Gradescope.
