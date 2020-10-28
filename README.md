@@ -1,9 +1,9 @@
 # user-thread-ecs150
 
-# general info 
+# General Info 
 - Due Thursday, November 12th, 2020 at 11:59am via Gradescope.
 
-# objectives 
+# Objectives 
 - Implementing one of the most used containers in system programming (a
   queue/list) as specified by a given API.
 - Learning how to test your code, by writing your own testers and maximizing the
@@ -15,7 +15,7 @@
   as specified by a given API.
 - Writing high-quality C code by following established industry standards.
 
-# introduction 
+# Introduction 
 - **Goal:** understand the idea of threads by implementing a basic user-level
   thread library for Linux.
 - Recall, **user-level thread:** threads which the OS does not know about(OS
@@ -31,17 +31,17 @@
    (short) time slice at a time) fashion. 
 3. Be **preemptive**, that is to provide an interrupted-based scheduler. 
 
-# constraints 
+# Constraints 
 - Your code must be written in C and be compiled with GCC and only use the std
   functions provided by the GNU C Library (libc).
 
-# assessment 
+# Assessment 
 - Auto-grading: 60% of grade 
 - Manual review: 40% of grade 
 
-# suggest work phases
+# Suggested Work Phases
 
-## phase 0: Skeleton code 
+## Phase 0: Skeleton code 
 - Skeleton code is available in **/home/cs150jp/public/p2/**. 
 - This code already defines most of the prototypes for the functions you must
   implement, as explained in the following sections.
