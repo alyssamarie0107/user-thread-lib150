@@ -42,14 +42,7 @@
 # suggest work phases
 
 ## phase 0: Skeleton code 
-- Skeleton code is available in **/home/cs150jp/public/p2/**. $ cd
-  /home/cs150jp/public/p2 $ tree
-  .
-├── apps │   ├── Makefile │   ├── queue_tester.c │   ├── sem_buffer.c │   ├──
-sem_count.c │   ├── sem_prime.c │   ├── sem_simple.c │   ├── uthread_hello.c │
-└── uthread_yield.c └── libuthread ├── context.c ├── Makefile* ├── preempt.c*
-├── private.h ├── queue.c* ├── queue.h ├── sem.c* ├── sem.h ├── uthread.c* └──
-uthread.h
+- Skeleton code is available in **/home/cs150jp/public/p2/**. 
 - This code already defines most of the prototypes for the functions you must
   implement, as explained in the following sections.
 - The code is organized in 2 parts. 
