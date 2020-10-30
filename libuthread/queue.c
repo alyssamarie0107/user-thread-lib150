@@ -6,6 +6,27 @@
 
 struct queue {
 	/* TODO Phase 1 */
+	struct node {
+		queue_t data;
+		node *next;
+        
+		/* constructor for a node with data and pointer to next node */
+		node(const queue_t new_data, node *next_val=NULL) {
+			data = new_data;
+			next = next_val;
+		}
+
+		/* constructor for the pointer to next node */
+		node(node *next_val = NULL) {
+			next = next_val;
+		}
+	}
+
+	/* pointer to the head, tail and current element of the queue */
+	node *head;
+	node *tail;
+	node *current;
+	int q_size;
 };
 
 queue_t queue_create(void)
