@@ -5,39 +5,26 @@
 #include "queue.h"
 
 struct queue {
-	/* TODO Phase 1 */
-	struct node {
-		void* data;
-		node *next;
-        
-		/* constructor for a node with data and pointer to next node */
-		node(void* new_data, node *next_val=NULL) {
-			data = new_data;
-			next = next_val;
-		}
 
-		/* constructor for the pointer to next node */
-		node(node *next_val = NULL) {
-			next = next_val;
-		}
-	}; node
+	struct Node {
+		int data;
+		struct Node *next;
 
-	/* pointer to the head, tail and current element of the queue */
-	node *head;
-	node *tail;
-	node *current;
+	} *head, *tail, *current; /* pointer to the head, tail and current element of the queue */
+
+	
 	int q_size;
 };
 
 queue_t queue_create(void)
 {
-	/* TODO Phase 1 */
-	queue_t new_q;
+	queue_t new_q = malloc(sizeof(queue_t));
 
 	/* initialize the queue */
-	new_q.current = new_q.tail = new_q.head = malloc(sizeof(node));
-	new_q.q_size = 0;
+	new_q->current = new_q->tail = new_q->head = malloc(sizeof(struct Node));
+	new_q->q_size = 0;
 
+	return new_q;
 
 }
 
@@ -46,10 +33,20 @@ int queue_destroy(queue_t queue)
 	/* TODO Phase 1 */
 }
 
-int queue_enqueue(queue_t queue, void *data)
-{
-	/* TODO Phase 1 */
+int queue_enqueue(queue_t queue, int data)
+{	
+	if(queue != NULL) {
+		queue->tail = queue->tail->next = malloc(sizeof(struct Node));
+		queue->q_size++;
+		queue->tail->data = data;
+		queue->tail->next = NULL;
+		return 0;
+	}
+	
+	return -1;
+	
 }
+
 
 int queue_dequeue(queue_t queue, void **data)
 {
@@ -68,5 +65,5 @@ int queue_iterate(queue_t queue, queue_func_t func)
 
 int queue_length(queue_t queue)
 {
-	/* TODO Phase 1 */
+	return queue.q_size;
 }

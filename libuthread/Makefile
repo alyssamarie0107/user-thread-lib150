@@ -1,6 +1,29 @@
 # Target library
-lib := libuthread.a
+lib := main main.o queue.o
+
+objs := main.o queue.o
+
+CC	:= gcc
+CFLAGS := -Wall -Wextra -Werror -MMD
+CFLAG  += -g
+
+ifneq ($(V),1)
+Q = @
+endif
+
 
 all: $(lib)
+deps := $(patsubset %.o, %.d, $(objs))
+-include $(deps)
 
-## TODO: Phase 1
+main: $(objs)
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -o $@ $^
+
+%.o: %.c
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	@echo "clean"
+	$(Q)rm -f $(targets) $(objs) $(deps)
