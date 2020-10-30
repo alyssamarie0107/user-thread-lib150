@@ -7,11 +7,11 @@
 struct queue {
 	/* TODO Phase 1 */
 	struct node {
-		queue_t data;
+		void* data;
 		node *next;
         
 		/* constructor for a node with data and pointer to next node */
-		node(const queue_t new_data, node *next_val=NULL) {
+		node(void* new_data, node *next_val=NULL) {
 			data = new_data;
 			next = next_val;
 		}
@@ -20,7 +20,7 @@ struct queue {
 		node(node *next_val = NULL) {
 			next = next_val;
 		}
-	}
+	}; node
 
 	/* pointer to the head, tail and current element of the queue */
 	node *head;
@@ -32,6 +32,13 @@ struct queue {
 queue_t queue_create(void)
 {
 	/* TODO Phase 1 */
+	queue_t new_q;
+
+	/* initialize the queue */
+	new_q.current = new_q.tail = new_q.head = malloc(sizeof(node));
+	new_q.q_size = 0;
+
+
 }
 
 int queue_destroy(queue_t queue)
