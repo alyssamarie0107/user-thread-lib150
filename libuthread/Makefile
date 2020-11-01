@@ -5,7 +5,7 @@ objs := main.o queue.o
 
 CC	:= gcc
 CFLAGS := -Wall -Wextra -Werror -MMD
-CFLAG  += -g
+CFLAGS  += -g
 
 ifneq ($(V),1)
 Q = @
@@ -26,4 +26,4 @@ main: $(objs)
 
 clean:
 	@echo "clean"
-	$(Q)rm -f $(targets) $(objs) $(deps)
+	$(Q) rm -f $(targets) $(objs) $(deps)

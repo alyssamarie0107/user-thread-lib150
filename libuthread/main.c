@@ -26,43 +26,41 @@ void test_create(void)
 /* Enqueue/Dequeue simple */
 void test_queue_simple(void)
 {
-	int data = 3, *ptr;
-	int data2 = 5;
-    int size, ret;
+	int *ptr;
+    int data1 = 1, data2 = 2, data3 = 3, data4 = 4, data5 = 5, data6 = 6, data7 = 7;
+    int size,ret;
 	queue_t q;
 
 	fprintf(stderr, "*** TEST queue_simple ***\n");
 
 	q = queue_create();
-    size = queue_length(q);
-    fprintf(stdout, "size = %d\n", size);
-	ret = queue_enqueue(q, &data);
-    fprintf(stdout, " ret = %d\n", ret);
-    size = queue_length(q);
-    fprintf(stdout, "size = %d\n", size);
-	ret = queue_enqueue(q, &data2);
-    fprintf(stdout, " ret = %d\n", ret);
-    //fprintf(stdout, "enqued = %d", q->tail->data);
+    
+	queue_enqueue(q, &data1);
+	queue_enqueue(q, &data2);
+	queue_enqueue(q, &data3);
+	queue_enqueue(q, &data4);
+	queue_enqueue(q, &data5);
+	queue_enqueue(q, &data6);
+	size = queue_length(q);
+	fprintf(stdout, "(size = %d\n", size);
+	queue_delete(q, &data2);
+	size = queue_length(q);
+	fprintf(stdout, "(after delete 3) size = %d\n", size);
+	queue_delete(q, &data6);
+	size = queue_length(q);
+	fprintf(stdout, "(after delete6) size = %d\n", size);
+	ret = queue_enqueue(q, &data7);
+    fprintf(stdout, " ret = %d\n", ret); 
 	queue_dequeue(q, (void**)&ptr);
 	size = queue_length(q);
-    fprintf(stdout, "size = %d\n", size);
+    fprintf(stdout, "(after_deque) size = %d\n", size);
+	TEST_ASSERT(ptr == &data1);  
 	ret = queue_destroy(q);
-	fprintf(stdout, " ret = %d\n", ret);
+	fprintf(stdout, " (destroy)ret = %d\n", ret);
 	size = queue_length(q);
-    fprintf(stdout, "size = %d\n", size);
-	TEST_ASSERT(ptr == &data); 
+    fprintf(stdout, "size = %d\n", size); 
 
-	/* int data = 3, *ptr;
-	queue_t q;
-
-	fprintf(stderr, "*** TEST queue_simple ***\n");
-
-	q = queue_create();
-	queue_enqueue(q, &data);
-	queue_dequeue(q, (void**)&ptr);
-	TEST_ASSERT(ptr == &data); */
 }
- 
 int main(void)
 {
 	test_create();
