@@ -26,7 +26,8 @@ void test_create(void)
 /* Enqueue/Dequeue simple */
 void test_queue_simple(void)
 {
-	int data = 3; //, *ptr;
+	int data = 3, *ptr;
+	int data2 = 5;
     int size, ret;
 	queue_t q;
 
@@ -35,15 +36,33 @@ void test_queue_simple(void)
 	q = queue_create();
     size = queue_length(q);
     fprintf(stdout, "size = %d\n", size);
-	ret = queue_enqueue(q, data);
+	ret = queue_enqueue(q, &data);
     fprintf(stdout, " ret = %d\n", ret);
     size = queue_length(q);
     fprintf(stdout, "size = %d\n", size);
+	ret = queue_enqueue(q, &data2);
+    fprintf(stdout, " ret = %d\n", ret);
     //fprintf(stdout, "enqued = %d", q->tail->data);
-	//queue_dequeue(q, (void**)&ptr);
-	//TEST_ASSERT(ptr == &data);
-}
+	queue_dequeue(q, (void**)&ptr);
+	size = queue_length(q);
+    fprintf(stdout, "size = %d\n", size);
+	ret = queue_destroy(q);
+	fprintf(stdout, " ret = %d\n", ret);
+	size = queue_length(q);
+    fprintf(stdout, "size = %d\n", size);
+	TEST_ASSERT(ptr == &data); 
 
+	/* int data = 3, *ptr;
+	queue_t q;
+
+	fprintf(stderr, "*** TEST queue_simple ***\n");
+
+	q = queue_create();
+	queue_enqueue(q, &data);
+	queue_dequeue(q, (void**)&ptr);
+	TEST_ASSERT(ptr == &data); */
+}
+ 
 int main(void)
 {
 	test_create();

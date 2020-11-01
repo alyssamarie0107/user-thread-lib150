@@ -43,8 +43,8 @@ int queue_destroy(queue_t queue);
  * Return: -1 if @queue or @data are NULL, or in case of memory allocation error
  * when enqueing. 0 if @data was successfully enqueued in @queue.
  */
-//int queue_enqueue(queue_t queue, void *data);
-int queue_enqueue(queue_t queue, int data);
+
+int queue_enqueue(queue_t queue, void *data);
 
 /*
  * queue_dequeue - Dequeue data item
