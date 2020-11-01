@@ -145,6 +145,11 @@ int queue_delete(queue_t queue, void *data)
 	struct node *temp_node = queue->front;
     struct node *previous_node = NULL;
 
+	/* if data is NULL, you're done so return -1 */
+	if(data == NULL) {
+		return -1;
+	}
+
     /* if queue is empty, return -1 */
 	if(queue->front == NULL) {
         return -1;
