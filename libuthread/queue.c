@@ -37,24 +37,29 @@ int queue_enqueue(queue_t queue, void *data)
 	struct node *new_node = (struct node*)malloc(sizeof(struct node)); /* allocate memory using malloc () */
 	
 	/* return: -1 if @queue or @data are NULL, or in case of memory allocation error */
-	/****************************************************************************************
-	* ? confused why we would return -1 if the queue is NULL (empty) 
-	* ? when we create a queue, we create an empty queue 
-	* ? thus, when we want to enqueue data in this queue, it wouldnt work
-	* ? -> because we are returning -1 whenever the queue is empty.
-	* ? does this mean the queue has to already have data in it to enqueue a new data entry ?
-	******************************************************************************************/
 	if (data == NULL ||new_node == NULL) {
 		return -1;
 	}
 
 	new_node->data = data;
 	//printf("new_node: %d\n", *(int *)data);
+	printf("new_node: %p\n", &data);
 	new_node->next = NULL;
 
     // If queue is empty, set the front and rear node of queue to the new node
     if (queue->front == NULL && queue->rear == NULL) { 
         queue->front = queue->rear = new_node;
+
+		queue->queue_size++;
+		/* printing the queue's content */
+		struct node *temp = queue->front;
+		printf("queue content: ");
+		for(int i = 0; i < queue->queue_size; i++) {
+			printf("%d ",*(int *)temp->data);
+			temp = temp->next;
+		}
+		printf("\n");
+		return -1;
     } 	
 
 	queue->rear->next = new_node; /* the rear node's next will be set to new_node's address */
