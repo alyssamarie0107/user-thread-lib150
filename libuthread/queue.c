@@ -33,18 +33,19 @@ int queue_destroy(queue_t queue)
 
 int queue_enqueue(queue_t queue, void *data)
 {
-	/* create new node */
-	struct node *new_node = (struct node*)malloc(sizeof(struct node)); /* allocate memory using malloc () */
-	
 	/* return: -1 if @queue or @data are NULL, or in case of memory allocation error */
-	if (data == NULL ||new_node == NULL) {
+	if (data == NULL) {
 		return -1;
 	}
 
+	/* create new node */
+	struct node *new_node = (struct node*)malloc(sizeof(struct node)); /* allocate memory using malloc () */
 	new_node->data = data;
-	//printf("new_node: %d\n", *(int *)data);
-	printf("new_node: %p\n", &data);
 	new_node->next = NULL;
+
+	if (new_node == NULL) {
+		return -1;
+	}
 
     // If queue is empty, set the front and rear node of queue to the new node
     if (queue->front == NULL && queue->rear == NULL) { 
@@ -60,30 +61,30 @@ int queue_enqueue(queue_t queue, void *data)
 		}
 		printf("\n");
 		return -1;
-    } 	
+    } 
+	/* if queue is not empty */	
+	else {
+		queue->rear->next = new_node; /* the rear node's next will be set to new_node's address */
+		queue->rear = new_node; /* let rear node point to the new_node that has been created */
+		//printf("queue_rear: %d\n", *(int *)queue->rear->data);
 
-	queue->rear->next = new_node; /* the rear node's next will be set to new_node's address */
-	queue->rear = new_node; /* let rear node point to the new_node that has been created */
-	//printf("queue_rear: %d\n", *(int *)queue->rear->data);
+		queue->queue_size++;
 
-	queue->queue_size++;
-
-	/* printing the queue's content */
-	struct node *temp = queue->front;
-	printf("queue content: ");
-	for(int i = 0; i < queue->queue_size; i++) {
-		printf("%d ",*(int *)temp->data);
-		temp = temp->next;
+		/* printing the queue's content */
+		struct node *temp = queue->front;
+		printf("queue content: ");
+		for(int i = 0; i < queue->queue_size; i++) {
+			printf("%d ",*(int *)temp->data);
+			temp = temp->next;
+		}
+		printf("\n");
 	}
-	printf("\n");
-
 	return 0;
 }
 
 int queue_dequeue(queue_t queue, void **data)
 {
 	struct node *remove_front = queue->front;
-	printf("address want: %p\n", queue->front);
 
 	/* check if queue is empty */
 	if(queue->front == NULL) {
@@ -98,8 +99,7 @@ int queue_dequeue(queue_t queue, void **data)
 		queue->front = queue->front->next;
 	}
 	/* remove the oldest item of queue @queue and assign this item (the value of a pointer) to @data. */
-	*data = remove_front;
-	printf("*data address: %p\n", *data);
+	*data = remove_front->data;
 	free(remove_front);
 	queue->queue_size--;
 
