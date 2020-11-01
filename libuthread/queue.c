@@ -142,13 +142,15 @@ int queue_dequeue(queue_t queue, void **data)
 
 int queue_delete(queue_t queue, void *data)
 {
-	struct node *temp = queue->front;
-    struct node *previous = NULL;
+	struct node *temp_node = queue->front;
+    struct node *previous_node = NULL;
 
-    if(queue->front == NULL) {
+    /* if queue is empty, return -1 */
+	if(queue->front == NULL) {
         return -1;
     }
 
+    /* if element to delete is at front, make front point to next link */
     if(queue->front->data == data) {
         queue->front = queue->front->next;
 		queue->queue_size--;
@@ -164,19 +166,24 @@ int queue_delete(queue_t queue, void *data)
         return 0;
     }
 
-    while(temp != NULL && temp->data != data) {
-        if(temp == queue->rear) {
+    /* save the link that contains data and it's previous link, if data is found */
+    while(temp_node != NULL && temp_node->data != data) {
+		/* if you've got to the last link and data is not found still, return -1 */
+        if(temp_node == queue->rear) {
             return -1;
         }
-        previous = temp;
-        temp = temp->next;
+        previous_node = temp_node;
+        temp_node = temp_node->next;
     }
 
+	/* found data in the last link */
     if(queue->rear->data == data) {
-        previous->next = NULL;
-		queue->rear = previous;
+		/* make previous's next point to null because it's the last element in list */
+        previous_node->next = NULL;
+		/*make the new rear point to what previous was */
+		queue->rear = previous_node;
 		queue->queue_size--;
-        free(temp);
+        free(temp_node);
 		
 		/* printing the queue's content */
 		struct node *temp = queue->front;
@@ -188,9 +195,12 @@ int queue_delete(queue_t queue, void *data)
 		printf("\n");
     }
     else {
-        previous->next = temp->next;
+		/*if you got here, the element is neither at front or rear */
+
+		/* make previous's next skip the node that will be deleted and point to the next one*/
+        previous_node->next = temp_node->next;
 		queue->queue_size--;
-        free(temp);
+        free(temp_node);
 		
 		/* printing the queue's content */
 		struct node *temp = queue->front;
