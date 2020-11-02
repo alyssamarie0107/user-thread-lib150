@@ -18,7 +18,7 @@ libthread.a : $(objs)
 	ar rcs $(lib) $(objs)
 
 all: $(targets)
-deps := $(patsubset %.o, %.d, $(objs))
+deps := $(patsubst %.o, %.d, $(objs))
 -include $(deps)
 
 main: $(objs)
