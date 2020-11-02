@@ -10,7 +10,19 @@
 #include "uthread.h"
 
 struct uthread_tcb {
-	/* TODO Phase 2 */
+	/* must have TCB info: 
+	* - thread ID ??
+	* - context of thread (its set of registers & program counter)
+	* - pointer to the thread' stack area
+	* - info about state of thread(running/ready/blocked/exited) 
+	* - pointer  to the process that triggered the creation of this threads ??
+	* - pointer to threads created by this thread  ?? */
+
+	
+	uthread_ctx_t u_context; /* user-level thread context */
+	void *stack_ptr; /* pointer to thread stack */
+
+	
 };
 
 struct uthread_tcb *uthread_current(void)
