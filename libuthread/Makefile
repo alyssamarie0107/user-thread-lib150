@@ -1,8 +1,8 @@
 # Target library
 lib := libuthread.a 
-targets := main main.o queue.o
+targets := queue_tester queue_tester.o queue.o
 
-objs := main.o queue.o
+objs := queue_tester.o queue.o
 
 CC	:= gcc
 CFLAGS := -Wall -Wextra -Werror -MMD
@@ -21,7 +21,7 @@ all: $(targets)
 deps := $(patsubst %.o, %.d, $(objs))
 -include $(deps)
 
-main: $(objs)
+queue_tester: $(objs)
 	@echo "CC $@"
 	$(Q)$(CC) $(CFLAGS) -o $@ $^
 
