@@ -1,5 +1,6 @@
 # Target library
-lib := main main.o queue.o
+lib := libuthread.a 
+targets := main main.o queue.o
 
 objs := main.o queue.o
 
@@ -7,12 +8,16 @@ CC	:= gcc
 CFLAGS := -Wall -Wextra -Werror -MMD
 CFLAGS  += -g
 
+
+
 ifneq ($(V),1)
 Q = @
 endif
 
+libthread.a : $(objs)
+	ar rcs $(lib) $(objs)
 
-all: $(lib)
+all: $(targets)
 deps := $(patsubset %.o, %.d, $(objs))
 -include $(deps)
 
