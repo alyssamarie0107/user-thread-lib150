@@ -26,16 +26,17 @@ void test_create(void)
 /* Enqueue/Dequeue simple */
 void test_queue_simple(void)
 {
-	int *ptr;
-    int data1 = 1, data2 = 2, data3 = 3, data4 = 4, data5 = 5, data6 = 6, data7 = 7;
-    int size,ret;
+	//int *ptr;
+    int data1 = 1; //, data2 = 2, data3 = 3, data4 = 4, data5 = 5, data6 = 6, data7 = 7;
+    //int size,ret;
 	queue_t q;
 
 	fprintf(stderr, "*** TEST queue_simple ***\n");
 
 	q = queue_create();
+	TEST_ASSERT(queue_delete(q, &data1) == -1);
     
-	queue_enqueue(q, &data1);
+	/*queue_enqueue(q, &data1);
 	queue_enqueue(q, &data2);
 	queue_enqueue(q, &data3);
 	queue_enqueue(q, &data4);
@@ -58,7 +59,7 @@ void test_queue_simple(void)
 	ret = queue_destroy(q);
 	fprintf(stdout, " (destroy)ret = %d\n", ret);
 	size = queue_length(q);
-    fprintf(stdout, "size = %d\n", size); 
+    fprintf(stdout, "size = %d\n", size);  */
 
 }
 int main(void)
