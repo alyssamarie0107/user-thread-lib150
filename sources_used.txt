@@ -1,0 +1,3 @@
+In here we can put the sources that we'll use to inspire our work.
+
+1) https://stackoverflow.com/questions/11344547/how-do-i-compile-a-static-library (for makefile)
