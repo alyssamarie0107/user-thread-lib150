@@ -21,7 +21,7 @@ struct uthread_tcb {
 	
 	uthread_ctx_t u_context; /* user-level thread context */
 	void *stack_ptr; /* pointer to thread stack */
-
+	char *thread_state;
 	
 };
 
