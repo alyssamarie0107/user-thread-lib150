@@ -10,6 +10,11 @@
 #include "uthread.h"
 #include "queue.h"
 
+#define THREAD_READY "ready"
+
+/* make ready_queue global */
+
+queue_t ready_queue; 
 struct uthread_tcb {
 	/* must have TCB info: 
 	* - thread ID ??
@@ -44,22 +49,30 @@ void uthread_exit(void)
 
 int uthread_create(uthread_func_t func, void *arg)
 {
-	/* allocate new stack for the thread */
-	struct uthread_tcb *new_stack = uthread_ctx_alloc_stack();
+	/* allocate memory for the new thread thread */
+	struct uthread_tcb *new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
+
+	/* allocate memoory for stack for the new thread */
+	new_thread->stack_ptr = uthread_ctx_alloc_stack();
+
+	/* set READY state for the newly created thread */
+	new_thread->thread_state = THREAD_READY; 
 
 	/* check if the stack was allocated; return -1 if it wasn't */
-	if(new_stack == NULL) {
+	if(new_thread->stack_ptr == NULL) {
 		return -1;
 	}
 
 	/* initialize the context of the new thread*/
-	int ctx_init_status = uthread_ctx_init(new_stack->u_context,new_stack, func, arg);
+	int ctx_init_status = uthread_ctx_init(new_thread->u_context,new_thread->stack_ptr, func, arg);
 	
 	/* return -1 if context creation failed */
 	if(ctx_init_status == -1) {	
 		return -1;
 	}
 
+	/* put the new thread in the ready_queue */
+	queue_enqueue(ready_queue, &new_thread);
 	return 0;
 
 }
@@ -67,7 +80,7 @@ int uthread_create(uthread_func_t func, void *arg)
 /*int uthread_start(uthread_func_t func, void *arg)
 {   //maybe we need this queue to push the threads that are ready to run
 	//better said to use the queue as FIFO scheduler
-	queue_t ready_queue;
+
 	ready_queue = queue_create();
 	
 	//creates a new initial thread as specified by argumnents of function
