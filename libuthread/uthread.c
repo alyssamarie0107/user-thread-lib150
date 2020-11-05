@@ -11,10 +11,14 @@
 #include "queue.h"
 
 #define THREAD_READY "ready"
+#define THREAD_RUNNING "running"
+#define THREAD_BLOCKED "blocked"
+#define THREAD_WAITING "waiting"
 
 /* make ready_queue global */
 
 queue_t ready_queue; 
+
 struct uthread_tcb {
 	/* must have TCB info: 
 	* - thread ID ??
