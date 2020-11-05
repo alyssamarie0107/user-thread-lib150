@@ -90,10 +90,22 @@ int uthread_create(uthread_func_t func, void *arg)
 	//creates a new initial thread as specified by argumnents of function
 	uthread_create(func, arg);
 	
-	//executes an infinite loop
+	//executes an infinite loop - idle loop
 		//when there are no more threads which are ready to run, stops the idle loop and returns
 		//or yileds to next available thread
 		//it could deal with threads that reached completion and destroys their associated TCB
+	while (1) {
+
+		//when there are no more threads ready to run, exit the loop
+		if(ready_queue->queue_size == 0) {
+			exit(0);
+		}
+
+		//yeald to the new avaialble thread which is the front of queue
+		if(queue_dequeue(ready_queue, (void**)&thread_ptr) == 0) {
+			thread_yield();
+		}
+	}
 	
 }
 
