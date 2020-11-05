@@ -8,6 +8,7 @@
 
 #include "private.h"
 #include "uthread.h"
+#include "queue.h"
 
 struct uthread_tcb {
 	/* must have TCB info: 
@@ -31,6 +32,8 @@ struct uthread_tcb {
 
 void uthread_yield(void)
 {
+	//would suspend current thread and put it at the rear of the ready_queue
+	//called to ask the library's scheduler to pick and run the next available thread
 	
 } */
 
@@ -62,7 +65,18 @@ int uthread_create(uthread_func_t func, void *arg)
 }
 
 /*int uthread_start(uthread_func_t func, void *arg)
-{
+{   //maybe we need this queue to push the threads that are ready to run
+	//better said to use the queue as FIFO scheduler
+	queue_t ready_queue;
+	ready_queue = queue_create();
+	
+	//creates a new initial thread as specified by argumnents of function
+	uthread_create(func, arg);
+	
+	//executes an infinite loop
+		//when there are no more threads which are ready to run, stops the idle loop and returns
+		//or yileds to next available thread
+		//it could deal with threads that reached completion and destroys their associated TCB
 	
 }
 
