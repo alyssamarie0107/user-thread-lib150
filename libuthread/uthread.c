@@ -17,45 +17,60 @@ struct uthread_tcb {
 	* - info about state of thread(running/ready/blocked/exited) 
 	* - pointer  to the process that triggered the creation of this threads ??
 	* - pointer to threads created by this thread  ?? */
-
 	
-	uthread_ctx_t u_context; /* user-level thread context */
-	void *stack_ptr; /* pointer to thread stack */
+	uthread_ctx_t *u_context; /* user-level thread context */
+	char *stack_ptr; /* pointer to thread stack */
 	char *thread_state;
 	
 };
 
-struct uthread_tcb *uthread_current(void)
+/*struct uthread_tcb *uthread_current(void)
 {
-	/* TODO Phase 2 */
+	
 }
 
 void uthread_yield(void)
 {
-	/* TODO Phase 2 */
-}
+	
+} */
 
 void uthread_exit(void)
 {
-	/* TODO Phase 2 */
-}
+	
+} 
 
 int uthread_create(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
+	/* allocate new stack for the thread */
+	struct uthread_tcb *new_stack = uthread_ctx_alloc_stack();
+
+	/* check if the stack was allocated; return -1 if it wasn't */
+	if(new_stack == NULL) {
+		return -1;
+	}
+
+	/* initialize the context of the new thread*/
+	int ctx_init_status = uthread_ctx_init(new_stack->u_context,new_stack, func, arg);
+	
+	/* return -1 if context creation failed */
+	if(ctx_init_status == -1) {	
+		return -1;
+	}
+
+	return 0;
+
 }
 
-int uthread_start(uthread_func_t func, void *arg)
+/*int uthread_start(uthread_func_t func, void *arg)
 {
-	/* TODO Phase 2 */
+	
 }
 
 void uthread_block(void)
 {
-	/* TODO Phase 2/3 */
+	
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	/* TODO Phase 2/3 */
-}
+} */
