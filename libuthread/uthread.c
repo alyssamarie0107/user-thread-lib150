@@ -17,7 +17,8 @@
 
 /* make ready_queue global */
 
-queue_t ready_queue; 
+static queue_t ready_queue; 
+static struct uthread_tcb *new_thread;
 
 struct uthread_tcb {
 	/* must have TCB info: 
@@ -35,7 +36,7 @@ struct uthread_tcb {
 };
 
 /*struct uthread_tcb *uthread_current(void)
-{
+{	
 	
 }
 
@@ -54,7 +55,7 @@ void uthread_exit(void)
 int uthread_create(uthread_func_t func, void *arg)
 {
 	/* allocate memory for the new thread thread */
-	struct uthread_tcb *new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
+	new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 
 	/* allocate memoory for stack for the new thread */
 	new_thread->stack_ptr = uthread_ctx_alloc_stack();
@@ -81,7 +82,7 @@ int uthread_create(uthread_func_t func, void *arg)
 
 }
 
-/*int uthread_start(uthread_func_t func, void *arg)
+int uthread_start(uthread_func_t func, void *arg)
 {   //maybe we need this queue to push the threads that are ready to run
 	//better said to use the queue as FIFO scheduler
 
@@ -89,6 +90,9 @@ int uthread_create(uthread_func_t func, void *arg)
 	
 	//creates a new initial thread as specified by argumnents of function
 	uthread_create(func, arg);
+	//execute the function of the initial thread
+	func(arg);
+
 	
 	//executes an infinite loop - idle loop
 		//when there are no more threads which are ready to run, stops the idle loop and returns
@@ -100,16 +104,15 @@ int uthread_create(uthread_func_t func, void *arg)
 		if(ready_queue->queue_size == 0) {
 			exit(0);
 		}
+	
 
-		//yeald to the new avaialble thread which is the front of queue
-		if(queue_dequeue(ready_queue, (void**)&thread_ptr) == 0) {
 			thread_yield();
 		}
 	}
 	
-}
+} 
 
-void uthread_block(void)
+/*void uthread_block(void)
 {
 	
 }
