@@ -3,9 +3,8 @@
 default_target := libuthread.a
 targets := libuthread.a queue_tester uthread
 objs1 := queue_tester.o queue.o 
-objs2 := uthread.o context.o
+all_objs:= queue_tester.o queue.o uthread.o context.o preempt.o
 #all_objs:= queue_tester.o queue.o
-all_objs:= queue_tester.o queue.o uthread.o context.o
 
 CC	:= gcc
 CFLAGS := -Wall -Wextra -Werror -MMD
@@ -23,7 +22,7 @@ queue_tester: $(objs1)
 	@echo "CC $@"
 	$(Q)$(CC) $(CFLAGS) -o $@ $^
 
-uthread: $(objs2)
+uthread: $(all_objs)
 	@echo "CC $@"
 	$(Q)$(CC) $(CFLAGS) -o $@ $^
 
