@@ -1,31 +1,29 @@
 # Target library
-## TODO: Phase 1
-
-lib := main main.o queue.o
-
-objs := main.o queue.o
+# library archive must be the default target of Makefile according to prompt
+targets := libuthread.a
+objs := queue_tester.o queue.o uthread.o context.o
 
 CC	:= gcc
 CFLAGS := -Wall -Wextra -Werror -MMD
-CFLAG  += -g
+CFLAGS  += -g
 
 ifneq ($(V),1)
 Q = @
 endif
 
-
-all: $(lib)
-deps := $(patsubset %.o, %.d, $(objs))
+all: $(targets)
+deps := $(patsubst %.o, %.d, $(objs))
 -include $(deps)
 
-main: $(objs)
+$(targets): $(objs)
 	@echo "CC $@"
-	$(Q)$(CC) $(CFLAGS) -o $@ $^
+	#$(Q)$(CC) $(CFLAGS) -o $@ $^
+	ar rcs $(targets) $(objs)
 
 %.o: %.c
 	@echo "CC $@"
 	$(Q)$(CC) $(CFLAGS) -c -o $@ $<
-
+	
 clean:
 	@echo "clean"
-	$(Q)rm -f $(targets) $(objs) $(deps)
+	$(Q) rm -f $(targets) $(objs) $(deps)
