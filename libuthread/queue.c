@@ -47,13 +47,13 @@ int queue_enqueue(queue_t queue, void *data)
 
 		queue->queue_size++;
 		/* printing the queue's content */
-		struct node *temp = queue->front;
-		printf("queue content: ");
+	/*	struct node *temp = queue->front;
+		printf("empty:queue content: ");
 		for(int i = 0; i < queue->queue_size; i++) {
 			printf("%d ",*(int *)temp->data);
 			temp = temp->next;
 		}
-		printf("\n");
+		printf("\n"); */
 		return 0;
     } 
 	/* if queue is not empty */	
@@ -66,13 +66,21 @@ int queue_enqueue(queue_t queue, void *data)
 
 		/* printing the queue's content */
 		struct node *temp = queue->front;
-		printf("queue content: ");
+		printf("else: queue content: ");
 		for(int i = 0; i < queue->queue_size; i++) {
 			printf("%d ",*(int *)temp->data);
 			temp = temp->next;
 		}
 		printf("\n");
 	}
+
+	/*		struct node *temp = queue->front;
+		printf("queue content: ");
+		for(int i = 0; i < queue->queue_size; i++) {
+			printf("%d ",*(int *)temp->data);
+			temp = temp->next;
+		}
+		printf("\n"); */
 
 	return 0;
 }

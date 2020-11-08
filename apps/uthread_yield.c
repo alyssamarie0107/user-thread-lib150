@@ -15,16 +15,16 @@
 
 #include <uthread.h>
 
-void thread3(void *arg)
+/*void thread3(void *arg)
 {
 	uthread_yield();
 	printf("thread3\n");
-}
-
+} */
+ 
 void thread2(void *arg)
 {
-	uthread_create(thread3, NULL);
-	uthread_yield();
+	//uthread_create(thread3, NULL);
+	//uthread_yield();
 	printf("thread2\n");
 }
 

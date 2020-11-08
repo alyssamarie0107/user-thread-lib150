@@ -20,9 +20,10 @@ enum thread_state {
 /* make ready_queue global */
 
 static queue_t ready_queue; 
-//static queue_t current_threads;
+static queue_t current_threads;
 static queue_t zombie_queue;
-static struct uthread_tcb *new_thread;
+static struct uthread_tcb new_thread;
+ucontext_t initial_thread[1];
 
 struct uthread_tcb {
 	/* must have TCB info: 
@@ -33,7 +34,7 @@ struct uthread_tcb {
 	* - pointer  to the process that triggered the creation of this threads ??
 	* - pointer to threads created by this thread  ?? */
 	
-	uthread_ctx_t *u_context; /* user-level thread context */
+	uthread_ctx_t u_context; /* user-level thread context */
 	char *stack_ptr; /* pointer to thread stack */
 	int thread_state; /* stores the state of the thread */
 	
@@ -42,14 +43,22 @@ struct uthread_tcb {
 /*struct uthread_tcb *uthread_current(void)
 {	
 	
-}
+} */
 
 void uthread_yield(void)
 {
 	//would suspend current thread and put it at the rear of the ready_queue
 	//called to ask the library's scheduler to pick and run the next available thread
-	
-} */
+	struct uthread_tcb *prev;
+	struct uthread_tcb *next;
+	queue_dequeue(current_threads, (void**)&prev);
+	queue_dequeue(ready_queue, (void**)&next);
+	uthread_ctx_switch(&prev->u_context, &next->u_context);
+
+	//IF YOU COMMENT OUT LINE 52,54 AND UNCOMMENT 59, THEN COMMENT OUT THREAD 3 FTC. FROM UTHREAD_YIELD.C AND LINE 26,27, YIELD WORKS */
+	//uthread_ctx_switch(&initial_thread[0], &next->u_context);
+		
+} 
 
 void uthread_exit(void)
 {
@@ -61,21 +70,21 @@ void uthread_exit(void)
 int uthread_create(uthread_func_t func, void *arg)
 {
 	/* allocate memory for the new thread thread */
-	new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
+	//new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 
 	/* allocate memoory for stack for the new thread */
-	new_thread->stack_ptr = uthread_ctx_alloc_stack();
+	new_thread.stack_ptr = uthread_ctx_alloc_stack();
 
 	/* set READY state for the newly created thread */
-	new_thread->thread_state = THREAD_READY; 
+	new_thread.thread_state = THREAD_READY; 
 
 	/* check if the stack was allocated; return -1 if it wasn't */
-	if(new_thread->stack_ptr == NULL) {
+	if(new_thread.stack_ptr == NULL) {
 		return -1;
 	}
 
 	/* initialize the context of the new thread*/
-	int ctx_init_status = uthread_ctx_init(new_thread->u_context,new_thread->stack_ptr, func, arg);
+	int ctx_init_status = uthread_ctx_init(&new_thread.u_context,new_thread.stack_ptr, func, arg);
 	
 	/* return -1 if context creation failed */
 	if(ctx_init_status == -1) {	
@@ -84,6 +93,7 @@ int uthread_create(uthread_func_t func, void *arg)
 
 	/* put the new thread in the ready_queue */
 	queue_enqueue(ready_queue, &new_thread);
+	printf("ran uthread_create()\n");
 	return 0;
 
 }
@@ -110,15 +120,15 @@ int uthread_start(uthread_func_t func, void *arg)
 	 */
 
 	/* allocate memory for the initial thread */
-	//struct uthread_tcb *initial_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
-	ucontext_t initial_thread[1];
+	struct uthread_tcb save_initial_thread;
 	getcontext(&initial_thread[0]);
 
 	/* allocate memory for stack for the initial thread */
-	//initial_thread->stack_ptr = uthread_ctx_alloc_stack();
+	save_initial_thread.stack_ptr = initial_thread[0].uc_stack.ss_sp;
+	save_initial_thread.u_context = initial_thread[0];
 
 	/* check if the stack was allocated; return -1 if it wasn't */
-	/*if(new_thread->stack_ptr == NULL) {
+	/*if(save_initial_thread->stack_ptr == NULL) {
 		return -1;
 	} */
 
@@ -126,10 +136,13 @@ int uthread_start(uthread_func_t func, void *arg)
 	 * piazza: professor states that there cannot be a situation where none of the threads are ready
 	 * the initial thread should always be ready, since it is the one that's running the idle loop 
 	 */
-	//initial_thread->thread_state = THREAD_READY;
+	save_initial_thread.thread_state = THREAD_ZOMBIE;
+	printf("before enqueuing initial thread\n");
+	queue_enqueue(current_threads, &save_initial_thread);
 
 	func(arg);
 	//uthread_ctx_switch(initial_thread->u_context, uthread_create(func, arg));
+	
 
 	/* 
 	 * 3. executes an infinite loop - idle loop 
@@ -145,7 +158,8 @@ int uthread_start(uthread_func_t func, void *arg)
 		}
 		/* b. simply yields to next available thread */
 		else {
-			//thread_yield();
+
+			//uthread_yield();
 		}
 	}
 	return 0;
