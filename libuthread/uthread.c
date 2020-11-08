@@ -10,14 +10,18 @@
 #include "uthread.h"
 #include "queue.h"
 
-#define THREAD_READY "ready"
-#define THREAD_RUNNING "running"
-#define THREAD_BLOCKED "blocked"
-#define THREAD_WAITING "waiting"
+enum thread_state {
+	THREAD_READY, /* when a thread is created or when a thread is yielded or preempted, should have this state ready */
+	THREAD_RUNNING, /* when a thread is elected to run, set thread state to running */
+	THREAD_BLOCKED, /* when a thread does some sort of I/O request, block it, and when it is complete, set back to ready state */
+	THREAD_ZOMBIE /* when a thread has a normal/abnormal termination, set thread state to zombie, when the thread is collected, can remove this thread from queue ? */
+};
 
 /* make ready_queue global */
 
 static queue_t ready_queue; 
+//static queue_t current_threads;
+static queue_t zombie_queue;
 static struct uthread_tcb *new_thread;
 
 struct uthread_tcb {
@@ -31,7 +35,7 @@ struct uthread_tcb {
 	
 	uthread_ctx_t *u_context; /* user-level thread context */
 	char *stack_ptr; /* pointer to thread stack */
-	char *thread_state;
+	int thread_state; /* stores the state of the thread */
 	
 };
 
@@ -49,7 +53,9 @@ void uthread_yield(void)
 
 void uthread_exit(void)
 {
-	
+	//change the state of the thread to zombie
+	//destroy the associated TCB
+	//using assert(0) to exit the thread ???
 } 
 
 int uthread_create(uthread_func_t func, void *arg)
@@ -85,36 +91,70 @@ int uthread_create(uthread_func_t func, void *arg)
 int uthread_start(uthread_func_t func, void *arg)
 {   //maybe we need this queue to push the threads that are ready to run
 	//better said to use the queue as FIFO scheduler
-
+/* create the queues by calling the queue_create function from queue.c */
 	ready_queue = queue_create();
-	
-	//creates a new initial thread as specified by argumnents of function
-	uthread_create(func, arg);
-	//execute the function of the initial thread
+	zombie_queue = queue_create();
+
+	/* 
+	 * 2. creates a new thread, initial thread, as specified by argumnents of function 
+	 * once the initial thread is created, it can interact with the other functions of the library, create new threads, exit, etc.
+	 * OH:
+	 * - need to prepare for the fact that if you are going to create multiple threads, then the thread you are in currently needs to somehow exists 
+	 * - for all of the other threads that you are going to create dynamically, going to call uthread_create();
+	 * 		-> going to allocate a TCB and initialize it in a certain way 
+	 * - for the thread that is already running(initial thread), at some point you also need to create a TCB for this guy
+	 * - this is what it means when you call uthread_start()
+	 * 		-> the thread that is currently running, needs to exist as part of the library as well so we can context switch out of it and get into our scheduling
+	 * - we are not creating this initial/current thread by calling uthread_create() bc it should already exist
+	 * 		-> need to make some data structures to make it part of the library in general 
+	 */
+
+	/* allocate memory for the initial thread */
+	//struct uthread_tcb *initial_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
+	ucontext_t initial_thread[1];
+	getcontext(&initial_thread[0]);
+
+	/* allocate memory for stack for the initial thread */
+	//initial_thread->stack_ptr = uthread_ctx_alloc_stack();
+
+	/* check if the stack was allocated; return -1 if it wasn't */
+	/*if(new_thread->stack_ptr == NULL) {
+		return -1;
+	} */
+
+	/* 
+	 * piazza: professor states that there cannot be a situation where none of the threads are ready
+	 * the initial thread should always be ready, since it is the one that's running the idle loop 
+	 */
+	//initial_thread->thread_state = THREAD_READY;
+
 	func(arg);
+	//uthread_ctx_switch(initial_thread->u_context, uthread_create(func, arg));
 
-	
-	//executes an infinite loop - idle loop
-		//when there are no more threads which are ready to run, stops the idle loop and returns
-		//or yileds to next available thread
-		//it could deal with threads that reached completion and destroys their associated TCB
+	/* 
+	 * 3. executes an infinite loop - idle loop 
+	 */
 	while (1) {
-
-		//when there are no more threads ready to run, exit the loop
-		if(ready_queue->queue_size == 0) {
+		/* a.when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
+		if(queue_length(ready_queue) == 0) {
 			exit(0);
 		}
-	
-
-			thread_yield();
+		/* c. deal with threads that reached completion TCB */
+		else if(queue_length(zombie_queue) != 0){
+			/* destroy associated TCB */
+		}
+		/* b. simply yields to next available thread */
+		else {
+			//thread_yield();
 		}
 	}
-	
+	return 0;
 } 
 
 /*void uthread_block(void)
 {
-	
+	//do you call block within yield()?
+	//block a thread when it deals with I/O so another to execute
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
