@@ -65,13 +65,13 @@ int queue_enqueue(queue_t queue, void *data)
 		queue->queue_size++;
 
 		/* printing the queue's content */
-		struct node *temp = queue->front;
+		/*struct node *temp = queue->front;
 		printf("else: queue content: ");
 		for(int i = 0; i < queue->queue_size; i++) {
 			printf("%d ",*(int *)temp->data);
 			temp = temp->next;
 		}
-		printf("\n");
+		printf("\n"); */
 	}
 
 	/*		struct node *temp = queue->front;
@@ -100,13 +100,13 @@ int queue_destroy(queue_t queue)
 	}
 
 	/* printing the queue's content */
-	struct node *temp = queue->front;
+/*	struct node *temp = queue->front;
 	printf("queue content: ");
 	for(int i = 0; i < queue->queue_size; i++) {
 		printf("%d ",*(int *)temp->data);
 		temp = temp->next;
 	}
-	printf("\n");
+	printf("\n"); */
     
 	/*if after destroying everything queue is still not empty, return -1 */
 	if(queue->front != NULL || queue->queue_size != 0) {
@@ -137,13 +137,13 @@ int queue_dequeue(queue_t queue, void **data)
 	queue->queue_size--;
 
 	/* printing the queue's content */
-	struct node *temp = queue->front;
+	/*struct node *temp = queue->front;
 	printf("queue content: ");
 	for(int i = 0; i < queue->queue_size; i++) {
 		printf("%d ",*(int *)temp->data);
 		temp = temp->next;
 	}
-	printf("\n");
+	printf("\n"); */
 	
 	return 0;
 }
