@@ -244,7 +244,7 @@ int queue_iterate(queue_t queue, queue_func_t func) {
 		/* iterate throught the queue and apply th*/
 		for(int i = 0; i < queue->queue_size; i++) {
 			func(queue->current->data);
-			printf("%d ",*(int *)queue->current->data);
+			//printf("%d ",*(int *)queue->current->data);
 			queue->current = queue->current->next;
 		}
 		printf("\n");

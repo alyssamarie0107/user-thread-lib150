@@ -17,6 +17,7 @@
 
 void thread3(void *arg)
 {
+	printf("got in thread3\n");
 	uthread_yield();
 	printf("thread3\n");
 } 
@@ -35,7 +36,7 @@ void thread1(void *arg)
 	printf("th1 before first yield\n");
 	uthread_yield();
 	printf("th1 after first yield\n");
-	printf("thread1\n");
+	printf("prinf thread1\n");
 	uthread_yield();
 }
 

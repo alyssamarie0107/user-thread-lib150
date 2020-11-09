@@ -17,6 +17,7 @@ void uthread_ctx_switch(uthread_ctx_t *prev, uthread_ctx_t *next)
 		perror("swapcontext");
 		exit(1);
 	}
+
 }
 
 void *uthread_ctx_alloc_stack(void)
