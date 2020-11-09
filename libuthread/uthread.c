@@ -20,13 +20,16 @@ enum thread_state {
 /* make ready_queue global */
 
 static queue_t ready_queue; 
-static queue_t current_threads;
+queue_t current_threads;
 static queue_t zombie_queue;
 uthread_ctx_t initial_thread[1];
 struct uthread_tcb new_thread;
+struct uthread_tcb *prev;
 int tcb_id = 0; //thread id counter
 
-	struct uthread_tcb *prev;
+//int first_time = 1;
+
+	//struct uthread_tcb *prev;
 	struct uthread_tcb *next;
 //int main_thread = 0;
 
@@ -56,29 +59,34 @@ void print_elem(void *data) {
 }
 void uthread_yield(void)
 {
+
 	//would suspend current thread and put it at the rear of the ready_queue
 	//called to ask the library's scheduler to pick and run the next available thread
 	printf("*******************************************************************************************************************\n");
 	printf("yield called\n");
 	printf("*******************************************************************************************************************\n");
 
+	
 	if(queue_length(ready_queue) >=1){
+	//first_time = 0;
+	printf("ready_queue: ");
 	queue_iterate(ready_queue, print_elem);
-	printf("Next print elems of current_threads\n");
+	printf("\nNext print elems of current_threads\n");
 	queue_iterate(current_threads, print_elem);
-	printf("read_queue after deque:: \n");
-
+	printf("read_queue after deque: \n");
 	queue_dequeue(current_threads, (void**)&prev);
 	queue_dequeue(ready_queue, (void**)&next);
 
 	queue_iterate(ready_queue, print_elem);
 	printf("current_threads after_deque: \n");
 	queue_iterate(current_threads, print_elem);
-
+	
 		queue_enqueue(ready_queue, prev);
-		//printf("ready_enqueue prev = %d\n",prev->tcb_id);
+		printf("ready_enqueue prev = %d\n",prev->tcb_id);
 		queue_enqueue(current_threads, next);
-		//printf("current_enqueue next = %d\n",next->tcb_id);
+		printf("current_enqueue next = %d\n",next->tcb_id);
+		
+
 		printf("after enqueuing prev and next again:\n");
 		queue_iterate(ready_queue, print_elem);
 		printf("current_threads after_deque: \n");
@@ -87,7 +95,7 @@ void uthread_yield(void)
 	
 	//printf("after enq: ready length = %d\n", queue_length(ready_queue));
 	uthread_ctx_switch(&prev->u_context, &next->u_context);
-
+	//prev = next;
 
 	//printf("after switch: ready length = %d\n", queue_length(ready_queue));
 	}
@@ -189,10 +197,12 @@ int uthread_start(uthread_func_t func, void *arg)
 	save_initial_thread.tcb_id = 0;
 
 	//enqueue main thread that calls uthread_start()
-	queue_enqueue(current_threads, &save_initial_thread);
-	
+
+	//prev = &save_initial_thread;
 	//create a thread with func, arg
 	uthread_create(func, arg);
+
+	queue_enqueue(current_threads, &save_initial_thread);
 	//uthread_ctx_switch(&prev->u_context, &next->u_context);
 	//uthread_create(func, arg);
 
