@@ -140,18 +140,85 @@ int queue_dequeue(queue_t queue, void **data)
 	return 0;
 }
 
-/*
 int queue_delete(queue_t queue, void *data)
 {
+	struct node *temp_node = queue->front;
+    struct node *previous_node = NULL;
 
+	/* if data is NULL, you're done so return -1 */
+	if(data == NULL) {
+		return -1;
+	}
+
+    /* if queue is empty, return -1 */
+	if(queue->front == NULL) {
+        return -1;
+    }
+
+    /* if element to delete is at front, make front point to next link */
+    if(queue->front->data == data) {
+        queue->front = queue->front->next;
+		queue->queue_size--;
+		
+		/* printing the queue's content */
+		struct node *temp = queue->front;
+		printf("queue content after deleting front: ");
+		for(int i = 0; i < queue->queue_size; i++) {
+			printf("%d ",*(int *)temp->data);
+			temp = temp->next;
+		}
+		printf("\n");
+        return 0;
+    }
+
+    /* save the link that contains data and it's previous link, if data is found */
+    while(temp_node != NULL && temp_node->data != data) {
+		/* if you've got to the last link and data is not found still, return -1 */
+        if(temp_node == queue->rear) {
+            return -1;
+        }
+        previous_node = temp_node;
+        temp_node = temp_node->next;
+    }
+
+	/* found data in the last link */
+    if(queue->rear->data == data) {
+		/* make previous's next point to null because it's the last element in list */
+        previous_node->next = NULL;
+		/*make the new rear point to what previous was */
+		queue->rear = previous_node;
+		queue->queue_size--;
+        free(temp_node);
+		
+		/* printing the queue's content */
+		struct node *temp = queue->front;
+		printf("queue content after deleting end: ");
+		for(int i = 0; i < queue->queue_size; i++) {
+			printf("%d ",*(int *)temp->data);
+			temp = temp->next;
+		}
+		printf("\n");
+    }
+    else {
+		/*if you got here, the element is neither at front or rear */
+
+		/* make previous's next skip the node that will be deleted and point to the next one*/
+        previous_node->next = temp_node->next;
+		queue->queue_size--;
+        free(temp_node);
+		
+		/* printing the queue's content */
+		struct node *temp = queue->front;
+		printf("queue content after deleting an element: ");
+		for(int i = 0; i < queue->queue_size; i++) {
+			printf("%d ",*(int *)temp->data);
+			temp = temp->next;
+		}
+		printf("\n");
+    }
+    return 0;
 }
-*/
 
-/*
- * This function iterates through the items in the queue @queue, from the oldest
- * item to the newest item, and calls the given callback function @func on each
- * item. The callback function receives the current data item as parameter.
-*/
 int queue_iterate(queue_t queue, queue_func_t func) {
 	/* return: -1 if @queue or @func are NULL, 0 otherwise. */
 	if((queue->front == NULL && queue->rear == NULL) || func == NULL) {
@@ -160,7 +227,7 @@ int queue_iterate(queue_t queue, queue_func_t func) {
 	else {
 		queue->current = queue->front;
 		printf("queue content: ");
-		/* iterate throught the queue and apply th*/
+		/* iterate throught the queue and apply the given callback function on each item in queue */
 		for(int i = 0; i < queue->queue_size; i++) {
 			func(queue->current->data);
 			printf("%d ",*(int *)queue->current->data);
