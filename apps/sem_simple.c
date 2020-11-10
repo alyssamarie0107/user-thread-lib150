@@ -16,6 +16,8 @@ sem_t sem1;
 sem_t sem2;
 sem_t sem3;
 
+
+
 static void thread3(void *arg)
 {
 	printf("th3: before down(sem3)\n");
