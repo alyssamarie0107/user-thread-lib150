@@ -28,7 +28,8 @@ enum thread_state {
 static queue_t ready_queue;
 static queue_t running_queue;
 
-static int tcb_id = 0;
+static int tcb_id[11] = {0,1,2,3,4,5,6,7,8,9};
+static int *i = tcb_id;
 /*
  * thread control block (TCB)
  * this structure holds information about the single thread 
@@ -48,8 +49,8 @@ static struct uthread_tcb *prev;
 static struct uthread_tcb *next;
 static struct uthread_tcb *new_thread_ptr; /* ptr points to new thread's TCB */
 static struct uthread_tcb *idle_thread_ptr; /* ptr points to main thread's TCB */
-static struct uthread_tcb *current_thread_ptr; /* ptr points to the current thread's TCB */
-
+static struct uthread_tcb *current_thread_ptr = NULL; /* ptr points to the current thread's TCB */
+static 	struct uthread_tcb new_thread;
 void print_elem(void *data) {
 	struct uthread_tcb *a = (struct uthread_tcb*)data;
 	printf("id = %d ",a->tcb_id); 
@@ -80,7 +81,7 @@ void uthread_yield(void)
 	printf("*****************************************************************************\n");
 
 	/* check if there are any threads in the queue */
-	if (queue_length(ready_queue) > 0) {
+	if (queue_length(ready_queue) > 0 && queue_length(running_queue) > 0) {
 		/* dequeue the current running thread */
 		printf("yield: running_queue before deque: ");
 		queue_iterate(running_queue, print_elem);
@@ -164,8 +165,8 @@ void uthread_exit(void)
 int uthread_create(uthread_func_t func, void *arg)
 {
 	printf("start of uthread_create()\n");
-	struct uthread_tcb new_thread;
 
+	new_thread_ptr = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 	/* allocate memory for stack for the new thread */
 	new_thread.stack_ptr = uthread_ctx_alloc_stack();
 
@@ -180,17 +181,20 @@ int uthread_create(uthread_func_t func, void *arg)
 	/* check if thread ctx was properly initialized */
 	if(ctx_init_status == 0) {	
 		/* set READY state for the newly created thread */
-		new_thread.thread_state = THREAD_READY; 
-		new_thread.tcb_id = ++tcb_id;
+		new_thread.thread_state = THREAD_READY;
+		i = i+1;
+		new_thread.tcb_id = *(i);
 		new_thread_ptr = &new_thread;
 
 		/* put the new thread in queue */
-		printf("tcb_id = %d\n", new_thread_ptr->tcb_id);
-		queue_enqueue(ready_queue, new_thread_ptr);
+		printf("tcb_id = %p\n", (void *)&new_thread_ptr->tcb_id);
+		printf("stack ptr = %p\n", new_thread_ptr->stack_ptr);
+		queue_enqueue(ready_queue, &new_thread);
 		//printf("end of uthread_create()\n");
 		printf("uthread_create: ready queue -> ");
 		queue_iterate(ready_queue, print_elem);
-
+		new_thread_ptr = NULL;
+		free(new_thread_ptr);
 		return 0;
 	}
 	/* if failed to initialize, return -1*/
