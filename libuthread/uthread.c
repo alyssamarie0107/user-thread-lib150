@@ -27,6 +27,7 @@ enum thread_state {
 /* global queue */
 static queue_t ready_queue;
 static queue_t running_queue;
+static queue_t blocked_queue;
 
 /*
  * thread control block (TCB)
@@ -100,7 +101,6 @@ void uthread_yield(void)
 /* 
  * naive verison of uthread_yield () 
  * only difference is that we are not going to enqueue the current running thread to the back of ready queue 
- * 
 */
 
 void uthread_exit(void)
@@ -202,7 +202,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	idle_thread.stack_ptr = idle_thread_ctx[0].uc_stack.ss_sp;
 	idle_thread.u_context = idle_thread_ctx[0];
 
-	/* register initial thread as a runing thread and enqueue it to the running queue */
+	/* register idle thread as a running thread and enqueue it to the running queue */
 	idle_thread.thread_state = THREAD_RUNNING;
 	idle_thread_ptr = &idle_thread;
 	
@@ -236,16 +236,52 @@ int uthread_start(uthread_func_t func, void *arg)
 }
 
 /****************************TODO:PHASE 2/3*************************
- * very similar to yield, except for yield you would put yourself back of the ready queue bc just yielding and you want to run again
+ * very similar to yield
+ * except for yield you would put yourself back of the ready queue bc just yielding and you want to run again
  * with block you wouldnt put yourself back in the ready queue because you are blocked
- * other than that it is very similar to queue 
+ * other than that it is very similar to yield
  * where does a thread go when it is in the block state though?
  * 		- semphore will have a queue of blocked threads that are waiting on it 
+ *******************************************************************/
  void uthread_block(void)
 {
+	printf("start of uthread_block()\n");
+	blocked_queue = queue_create();
+	
+	/* dequeue the current running thread */
+	printf("dequeue curr running thread from RUNNING queue \n");
+	queue_dequeue(running_queue, (void**)&prev);
+
+	/* update its thread state */
+	prev->thread_state = THREAD_BLOCKED;
+
+	/* ? where should we enqueue the blocked thread ?? */
+	/* putting it in a blocked queue for now */
+	printf("enqueue curr running thread to BLOCKED QUEUE \n");
+	queue_enqueue(blocked_queue, prev);
+
+	/* now get the next available thread in the ready queue */
+	printf("dequeue next available thread from READY queue \n");
+	queue_dequeue(ready_queue, (void**)&next);
+
+	/* insert next available thread in the ready queue */
+	printf("enqueue next available thread to RUNNING queue \n");
+	queue_enqueue(running_queue, next);
+
+	/* update its thread state */
+	next->thread_state = THREAD_RUNNING;
+
+	/* check if there are any next available threads in queue if so call yield */
+	if (queue_length(ready_queue) > 0) {
+		uthread_yield();
+	}
 }
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
+	printf("start of uthread_unblock()\n");
+	/* puts the unblocked thread back in the ready queue so it can be elected to run again */
+	printf("enqueue the blocked thread back into the ready queue\n");
+	queue_enqueue(ready_queue, uthread);
+	printf("end of uthread_unblock()\n");
 }
- ********************************************************************/
