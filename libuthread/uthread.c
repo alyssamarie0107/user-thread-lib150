@@ -168,6 +168,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	running_thread_ptr = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb)); 
 	prev = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 	next = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
+	new_thread_ptr = (struct uthread_tcb*)malloc(10*sizeof(struct uthread_tcb));
 
 	/* create idle thread structure */
 	struct uthread_tcb idle_thread;
@@ -210,6 +211,10 @@ int uthread_start(uthread_func_t func, void *arg)
 			free(running_thread_ptr);
 			free(prev);
 			free(next);
+			free(new_thread_ptr);
+			for(int i = 0; i < 10; i++) {
+
+			}
 
 			//printf("entered empty ready queue\n");
 			return 0;
