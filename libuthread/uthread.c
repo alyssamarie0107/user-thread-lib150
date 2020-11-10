@@ -43,7 +43,7 @@ struct uthread_tcb {
 static struct uthread_tcb *prev;
 static struct uthread_tcb *next;
 static struct uthread_tcb *new_thread_ptr; /* ptr points to new thread's TCB */
-static struct uthread_tcb *idle_thread_ptr; /* ptr points to main thread's TCB */
+//static struct uthread_tcb *idle_thread_ptr; /* ptr points to main thread's TCB */
 static struct uthread_tcb *running_thread_ptr;/* ptr points to the current thread's TCB */
 
 /* get the currently running thread and return ptr of the current thread's TCB */
@@ -115,6 +115,7 @@ int uthread_create(uthread_func_t func, void *arg)
 {
 	//printf("start of uthread_create()\n");
 	struct uthread_tcb new_thread;
+	//realloc(new_thread_ptr,sizeof(struct uthread_tcb));
 
 	/* allocate memory for stack for the new thread */
 	new_thread.stack_ptr = uthread_ctx_alloc_stack();
@@ -165,6 +166,8 @@ int uthread_start(uthread_func_t func, void *arg)
 	/* create the queues by calling the queue_create function from queue.c */
 	ready_queue = queue_create();
 	running_thread_ptr = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb)); 
+	prev = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
+	next = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 
 	/* create idle thread structure */
 	struct uthread_tcb idle_thread;
@@ -188,10 +191,11 @@ int uthread_start(uthread_func_t func, void *arg)
 	 */
 
 	/* make the idle_thread_ptr point to the idle_thread address */
-	idle_thread_ptr = &idle_thread;
+	//idle_thread_ptr 
+	//idle_thread_ptr = &idle_thread;
 	
 	/* running thread ptr should be pointing to the same address as idle_thread_ptr */
-	running_thread_ptr = idle_thread_ptr;
+	running_thread_ptr = &idle_thread;
 
 	//printf("creating new thread from func, arg\n");
 	/* create a new thread with func and arg */
@@ -204,6 +208,9 @@ int uthread_start(uthread_func_t func, void *arg)
 		if(queue_length(ready_queue) == 0) {
 			queue_destroy(ready_queue);
 			free(running_thread_ptr);
+			free(prev);
+			free(next);
+
 			//printf("entered empty ready queue\n");
 			return 0;
 		}
