@@ -212,9 +212,6 @@ int uthread_start(uthread_func_t func, void *arg)
 			free(prev);
 			free(next);
 			free(new_thread_ptr);
-			for(int i = 0; i < 10; i++) {
-
-			}
 
 			//printf("entered empty ready queue\n");
 			return 0;
