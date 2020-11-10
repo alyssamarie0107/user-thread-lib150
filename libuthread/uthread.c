@@ -281,7 +281,7 @@ int uthread_start(uthread_func_t func, void *arg)
 		running_thread_ptr = next;
 
 		/* context switch */
-		uthread_ctx_switch(&zombie_thread_ptr->u_context, &next->u_context);
+		uthread_ctx_switch(&blocked_thread_ptr->u_context, &next->u_context);
 	}
 	printf("this should not get printed.. right?\n");
 }
