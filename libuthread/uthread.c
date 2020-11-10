@@ -230,12 +230,12 @@ int uthread_start(uthread_func_t func, void *arg)
  *******************************************************************/
  void uthread_block(void)
 {
-	printf("entered uthread_block()\n");
+	//printf("entered uthread_block()\n");
 
 	/* update the running thread state */
 	running_thread_ptr->thread_state = THREAD_BLOCKED;
 
-	printf("calling uthread_yield() and leaving uthread_block()\n");
+	//printf("calling uthread_yield() and leaving uthread_block()\n");
 	uthread_yield();
 }
 
