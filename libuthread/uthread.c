@@ -281,35 +281,36 @@ void uthread_block(void) {
 
 
 		if (queue_length(ready_queue) > 0) {
-		/* dequeue the current running thread */
-		//printf("dequeue curr running thread from RUNNING queue \n");
-		printf("running_queue before deque:   ");
-		queue_iterate(running_queue, print_elem);
-		queue_dequeue(running_queue, (void**)&prev);
+			/* dequeue the current running thread */
+			//printf("dequeue curr running thread from RUNNING queue \n");
+			printf("running_queue before deque:   ");
+			//queue_iterate(running_queue, print_elem);
+			//queue_dequeue(running_queue, (void**)&prev);
 
-		/* update its thread state */
-		prev->thread_state = THREAD_BLOCKED;
+			/* update its thread state */
+			prev->thread_state = THREAD_BLOCKED;
 
-		/* insert this thread to the back of the queue */
-		//printf("enqueue curr running thread to READY queue \n");
-		queue_enqueue(blocked_queue, prev);
+			/* insert this thread to the back of the queue */
+			//printf("enqueue curr running thread to READY queue \n");
+			//queue_enqueue(blocked_queue, prev);
 
-		/* now get the next available thread in the ready queue */
-		//printf("dequeue next available thread from READY queue \n");
-		printf("ready_queue before deque:   ");
-		queue_iterate(ready_queue, print_elem);
-		queue_dequeue(ready_queue, (void**)&next);
+			/* now get the next available thread in the ready queue */
+			//printf("dequeue next available thread from READY queue \n");
+			printf("ready_queue before deque:   ");
+			//queue_iterate(ready_queue, print_elem);
+			//queue_dequeue(ready_queue, (void**)&next);
 
-		/* insert next available thread in the ready queue */
-		//printf("enqueue next available thread to RUNNING queue \n");
-		//queue_enqueue(running_queue, next);
+			/* insert next available thread in the ready queue */
+			//printf("enqueue next available thread to RUNNING queue \n");
+			//queue_enqueue(running_queue, next);
 
-		/* update its thread state */
-		next->thread_state = THREAD_RUNNING;
+			/* update its thread state */
+			next->thread_state = THREAD_RUNNING;
 
-		/* context switch */
-		uthread_ctx_switch(&prev->u_context, &next->u_context);
-	}
+			/* context switch */
+			uthread_yield();
+			//uthread_ctx_switch(&prev->u_context, &next->u_context);
+		}
 }
 
 /*
