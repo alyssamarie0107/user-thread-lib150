@@ -241,9 +241,9 @@ int uthread_start(uthread_func_t func, void *arg)
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-	printf("start of uthread_unblock()\n");
+	//printf("start of uthread_unblock()\n");
 	/* puts the unblocked thread back in the ready queue so it can be elected to run again */
-	printf("enqueue the blocked thread back into the ready queue\n");
+//	printf("enqueue the blocked thread back into the ready queue\n");
 	queue_enqueue(ready_queue, uthread);
-	printf("end of uthread_unblock()\n");
+//	printf("end of uthread_unblock()\n");
 }
