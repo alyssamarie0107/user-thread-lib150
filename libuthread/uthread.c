@@ -27,6 +27,7 @@ enum thread_state {
 /* global queue */
 static queue_t ready_queue;
 static queue_t running_queue;
+static queue_t blocked_queue;
 
 /*
  * thread control block (TCB)
@@ -192,6 +193,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	/* create the queues by calling the queue_create function from queue.c */
 	ready_queue = queue_create();
 	running_queue = queue_create();
+	blocked_queue = queue_create();
 
 	/* create idle thread structure */
 	struct uthread_tcb idle_thread;
@@ -258,7 +260,7 @@ void uthread_block(void) {
 
 		/* insert this thread to the back of the queue */
 		printf("enqueue curr running thread to READY queue \n");
-		queue_enqueue(ready_queue, prev);
+		queue_enqueue(blocked_queue, prev);
 
 		/* now get the next available thread in the ready queue */
 		printf("dequeue next available thread from READY queue \n");
@@ -282,6 +284,8 @@ void uthread_block(void) {
  */
 void uthread_unblock(struct uthread_tcb *uthread) {
 	/* the unblocked thread goes at the end of the ready queue */
+	
+	queue_enqueue(ready_queue, uthread);
 	
 }
 

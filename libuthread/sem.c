@@ -76,8 +76,10 @@ int sem_up(sem_t sem)
 	}
 
 	/* if the waiting list is not empty, release resource and increment internal count */
+	
+	sem->internal_counter++;
+
 	if(queue_length(sem->blocked_threads) > 0) {
-		sem->internal_counter++;
 		queue_dequeue(sem->blocked_threads, (void **)&unbock_thread);
 		uthread_unblock(unbock_thread);
 		
