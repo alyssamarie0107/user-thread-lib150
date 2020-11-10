@@ -44,7 +44,7 @@ static struct uthread_tcb *prev;
 static struct uthread_tcb *next;
 static struct uthread_tcb *new_thread_ptr; /* ptr points to new thread's TCB */
 static struct uthread_tcb *idle_thread_ptr; /* ptr points to main thread's TCB */
-static struct uthread_tcb *running_thread_ptr; /* ptr points to the current thread's TCB */
+static struct uthread_tcb *running_thread_ptr;/* ptr points to the current thread's TCB */
 
 /* get the currently running thread and return ptr of the current thread's TCB */
 struct uthread_tcb *uthread_current(void)
@@ -164,6 +164,7 @@ int uthread_start(uthread_func_t func, void *arg)
 {
 	/* create the queues by calling the queue_create function from queue.c */
 	ready_queue = queue_create();
+	running_thread_ptr = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb)); 
 
 	/* create idle thread structure */
 	struct uthread_tcb idle_thread;
@@ -201,6 +202,8 @@ int uthread_start(uthread_func_t func, void *arg)
 		//printf("entered while loop!\n");
 		/* when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
 		if(queue_length(ready_queue) == 0) {
+			queue_destroy(ready_queue);
+			free(running_thread_ptr);
 			//printf("entered empty ready queue\n");
 			return 0;
 		}
