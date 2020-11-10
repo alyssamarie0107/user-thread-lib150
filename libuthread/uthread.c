@@ -77,7 +77,7 @@ void uthread_yield(void)
 	/* called to ask the library's scheduler to pick and run the next available thread */
 
 	/* check if there are any threads in the queue */
-	if (queue_length(ready_queue) > 0) {
+	if (queue_length(ready_queue) > 0 && running_queue > 0) {
 		/* dequeue the current running thread */
 
 		queue_dequeue(running_queue, (void**)&prev);
