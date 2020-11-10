@@ -1,11 +1,12 @@
 #include <stddef.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "queue.h"
 #include "sem.h"
 #include "private.h"
 
-static struct uthread_tcb *unbock_thread;
+static struct uthread_tcb *unblock_thread;
 struct semaphore {
 	/*the internal counter of the semaphore */
 	size_t internal_counter;
@@ -59,6 +60,9 @@ int sem_down(sem_t sem)
 		/* enque the currently running thread on the waiting list*/
 		queue_enqueue(sem->blocked_threads, uthread_current());
 
+		//unblock_thread = uthread_current();
+		//printf("blocked thread is: %d", unblock_thread->tcb_id);
+
 		/* block the thread */
 		uthread_block();
 	}
@@ -80,8 +84,8 @@ int sem_up(sem_t sem)
 	sem->internal_counter++;
 
 	if(queue_length(sem->blocked_threads) > 0) {
-		queue_dequeue(sem->blocked_threads, (void **)&unbock_thread);
-		uthread_unblock(unbock_thread);
+		queue_dequeue(sem->blocked_threads, (void **)&unblock_thread);
+		uthread_unblock(unblock_thread);
 		
 	}
 	return 0;

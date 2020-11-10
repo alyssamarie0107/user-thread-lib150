@@ -29,6 +29,7 @@ static queue_t ready_queue;
 static queue_t running_queue;
 static queue_t blocked_queue;
 
+int tcb_id = 0;
 /*
  * thread control block (TCB)
  * this structure holds information about the single thread 
@@ -40,6 +41,7 @@ struct uthread_tcb {
 	uthread_ctx_t u_context; /* user-level thread context */
 	char *stack_ptr; /* pointer to thread stack */
 	int thread_state; /* stores the state of the thread */
+	int tcb_id;
 };
 
 /* structure pointers */
@@ -49,11 +51,17 @@ static struct uthread_tcb *new_thread_ptr; /* ptr points to new thread's TCB */
 static struct uthread_tcb *idle_thread_ptr; /* ptr points to main thread's TCB */
 static struct uthread_tcb *current_thread_ptr; /* ptr points to the current thread's TCB */
 
+void print_elem(void *data) {
+	struct uthread_tcb *a = (struct uthread_tcb*)data;
+	printf("id = %d ",a->tcb_id); 
+}
+
 /* get the currently running thread and return ptr of the current thread's TCB */
 struct uthread_tcb *uthread_current(void)
 {	
 	/* get the current thread by dequeuing it from queue */
 	queue_dequeue(running_queue, (void**)&current_thread_ptr);
+	printf("current_thread tcb_id = %d\n", current_thread_ptr->tcb_id);
 	/* however we don't want to actually remove it so put it back in queue */
 	queue_enqueue(running_queue, (void**)&current_thread_ptr);
 	return current_thread_ptr;
@@ -68,30 +76,42 @@ void uthread_yield(void)
 {
 	/* would suspend current thread and put it at the rear of the ready_queue */
 	/* called to ask the library's scheduler to pick and run the next available thread */
+	printf("*****************************************************************************\n");
+	printf("entered yield()\n");
+	printf("*****************************************************************************\n");
 
 	/* check if there are any threads in the queue */
 	if (queue_length(ready_queue) > 0) {
 		/* dequeue the current running thread */
-		printf("dequeue curr running thread from RUNNING queue \n");
+		printf("running_queue before deque: ");
+		queue_iterate(running_queue, print_elem);
 		queue_dequeue(running_queue, (void**)&prev);
+	
+
 
 		/* update its thread state */
 		prev->thread_state = THREAD_READY;
 
 		/* insert this thread to the back of the queue */
-		printf("enqueue curr running thread to READY queue \n");
+		//printf("enqueue curr running thread to READY queue \n");
 		queue_enqueue(ready_queue, prev);
 
 		/* now get the next available thread in the ready queue */
-		printf("dequeue next available thread from READY queue \n");
+		//printf("dequeue next available thread from READY queue \n");
+		printf("\nready_queue before deque:  ");
+		queue_iterate(ready_queue, print_elem);
 		queue_dequeue(ready_queue, (void**)&next);
 
 		/* insert next available thread in the ready queue */
-		printf("enqueue next available thread to RUNNING queue \n");
-		queue_enqueue(running_queue, next);
+		//printf("enqueue next available thread to RUNNING queue \n");
+
 
 		/* update its thread state */
 		next->thread_state = THREAD_RUNNING;
+		queue_enqueue(running_queue, next);
+		printf("\nrunning_queue after enqueue next:  ");
+		queue_iterate(running_queue, print_elem);
+		printf("\n");
 
 		/* context switch */
 		uthread_ctx_switch(&prev->u_context, &next->u_context);
@@ -106,17 +126,20 @@ void uthread_yield(void)
 
 void uthread_exit(void)
 {
+	printf("*****************************************************************************\n");
 	printf("start of uthread_exit()\n");
+	printf("*****************************************************************************\n");
+
 
 	/* dequeue the current running thread */
-	printf("dequeue curr running thread from RUNNING queue \n");
+	//printf("dequeue curr running thread from RUNNING queue \n");
 	queue_dequeue(running_queue, (void**)&prev);
 
 	/* update its thread state */
 	prev->thread_state = THREAD_ZOMBIE;
 
 	/* now get the next available thread in the ready queue if it's not empty*/
-	printf("dequeue next available thread from READY queue \n");
+	//printf("dequeue next available thread from READY queue \n");
 	if(queue_length(ready_queue) != 0){
 		queue_dequeue(ready_queue, (void**)&next);
 	}
@@ -126,7 +149,7 @@ void uthread_exit(void)
 	next->thread_state = THREAD_RUNNING;
 
 	/* insert next available thread into running queue */
-	printf("enqueue next available thread to RUNNING queue \n");
+	//printf("enqueue next available thread to RUNNING queue \n");
 	queue_enqueue(running_queue, next);
 
 	/* check if there are any next available threads in queue if so call yield */
@@ -159,13 +182,14 @@ int uthread_create(uthread_func_t func, void *arg)
 	if(ctx_init_status == 0) {	
 		/* set READY state for the newly created thread */
 		new_thread.thread_state = THREAD_READY; 
-
+		tcb_id++;
+		new_thread.tcb_id = tcb_id;
 		new_thread_ptr = &new_thread;
 
 		/* put the new thread in queue */
-		printf("enqueue new thread to READY queue \n");
+		printf("tcb_id = %d\n", new_thread_ptr->tcb_id);
 		queue_enqueue(ready_queue, new_thread_ptr);
-		printf("end of uthread_create()\n");
+		//printf("end of uthread_create()\n");
 		return 0;
 	}
 	/* if failed to initialize, return -1*/
@@ -209,13 +233,14 @@ int uthread_start(uthread_func_t func, void *arg)
 
 	/* register initial thread as a runing thread and enqueue it to the running queue */
 	idle_thread.thread_state = THREAD_RUNNING;
+	idle_thread.tcb_id = 0;
 	idle_thread_ptr = &idle_thread;
 	
-	printf("enqueue idle thread to RUNNING queue \n");
+	//printf("enqueue idle thread to RUNNING queue \n");
 	queue_enqueue(running_queue, idle_thread_ptr);
-	printf("enqueue complete \n");
+	//printf("enqueue complete \n");
 
-	printf("creating new thread from func, arg\n");
+	//printf("creating new thread from func, arg\n");
 	/* create a new thread with func and arg */
 	uthread_create(func, arg);
 	
@@ -228,7 +253,7 @@ int uthread_start(uthread_func_t func, void *arg)
 			/* destroy all the used queues before exiting*/
 			queue_destroy(ready_queue);
 			queue_destroy(running_queue);
-			printf("entered empty ready queue\n");
+			//printf("entered empty ready queue\n");
 			return 0;
 		}
 		/* deal with threads that reached completion TCB 
@@ -237,7 +262,7 @@ int uthread_start(uthread_func_t func, void *arg)
 		*/
 		/* simply yields to next available thread */
 		else {
-			printf("entered else uthread_yield statement\n");
+			//printf("entered else uthread_yield statement\n");
 			uthread_yield();
 		}
 	}
@@ -250,20 +275,29 @@ void uthread_block(void) {
 	 * change the status to THREAD_WAIT
 	 * to block it, do a context switch with the thread next available in the queue */
 
+		printf("*****************************************************************************\n");
+		printf("entered uthread_block()\n");
+		printf("*****************************************************************************\n");
+
+
 		if (queue_length(ready_queue) > 0) {
 		/* dequeue the current running thread */
-		printf("dequeue curr running thread from RUNNING queue \n");
+		//printf("dequeue curr running thread from RUNNING queue \n");
+		printf("running_queue before deque:   ");
+		queue_iterate(running_queue, print_elem);
 		queue_dequeue(running_queue, (void**)&prev);
 
 		/* update its thread state */
 		prev->thread_state = THREAD_BLOCKED;
 
 		/* insert this thread to the back of the queue */
-		printf("enqueue curr running thread to READY queue \n");
+		//printf("enqueue curr running thread to READY queue \n");
 		queue_enqueue(blocked_queue, prev);
 
 		/* now get the next available thread in the ready queue */
-		printf("dequeue next available thread from READY queue \n");
+		//printf("dequeue next available thread from READY queue \n");
+		printf("ready_queue before deque:   ");
+		queue_iterate(ready_queue, print_elem);
 		queue_dequeue(ready_queue, (void**)&next);
 
 		/* insert next available thread in the ready queue */
@@ -285,6 +319,10 @@ void uthread_block(void) {
 void uthread_unblock(struct uthread_tcb *uthread) {
 	/* the unblocked thread goes at the end of the ready queue */
 	
+	printf("*****************************************************************************\n");
+	printf("entered uthread_unblock(): \n");
+	printf("*****************************************************************************\n");
+
 	queue_enqueue(ready_queue, uthread);
 	
 }
