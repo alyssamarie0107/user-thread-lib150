@@ -222,6 +222,10 @@ int uthread_start(uthread_func_t func, void *arg)
 		printf("entered while loop!\n");
 		/* when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
 		if(queue_length(ready_queue) == 0 && queue_length(running_queue) == 0) {
+			
+			/* destroy all the used queues before exiting*/
+			queue_destroy(ready_queue);
+			queue_destroy(running_queue);
 			printf("entered empty ready queue\n");
 			return 0;
 		}
@@ -236,6 +240,49 @@ int uthread_start(uthread_func_t func, void *arg)
 		}
 	}
 	return 0;
+}
+
+
+void uthread_block(void) {
+	/* general idea - check if there are still threads in running queue 
+	 * change the status to THREAD_WAIT
+	 * to block it, do a context switch with the thread next available in the queue */
+
+		if (queue_length(ready_queue) > 0) {
+		/* dequeue the current running thread */
+		printf("dequeue curr running thread from RUNNING queue \n");
+		queue_dequeue(running_queue, (void**)&prev);
+
+		/* update its thread state */
+		prev->thread_state = THREAD_BLOCKED;
+
+		/* insert this thread to the back of the queue */
+		printf("enqueue curr running thread to READY queue \n");
+		queue_enqueue(ready_queue, prev);
+
+		/* now get the next available thread in the ready queue */
+		printf("dequeue next available thread from READY queue \n");
+		queue_dequeue(ready_queue, (void**)&next);
+
+		/* insert next available thread in the ready queue */
+		//printf("enqueue next available thread to RUNNING queue \n");
+		//queue_enqueue(running_queue, next);
+
+		/* update its thread state */
+		next->thread_state = THREAD_RUNNING;
+
+		/* context switch */
+		uthread_ctx_switch(&prev->u_context, &next->u_context);
+	}
+}
+
+/*
+ * uthread_unblock - Unblock thread
+ * @uthread: TCB of thread to unblock
+ */
+void uthread_unblock(struct uthread_tcb *uthread) {
+	/* the unblocked thread goes at the end of the ready queue */
+	
 }
 
 /****************************TODO:PHASE 2/3*************************

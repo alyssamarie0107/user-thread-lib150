@@ -5,6 +5,7 @@
 #include "sem.h"
 #include "private.h"
 
+static struct uthread_tcb *unbock_thread;
 struct semaphore {
 	/*the internal counter of the semaphore */
 	size_t internal_counter;
@@ -15,7 +16,7 @@ struct semaphore {
 sem_t sem_create(size_t count)
 {
 	/* allocate space on heap for the new semaphore */
-	sem_t new_semaphore = (sem_t*)malloc(sizeof(sem_t));
+	sem_t new_semaphore = (struct semaphore*)malloc(sizeof(sem_t));
 
 	/* initialize the internal counter to count */
 	new_semaphore->internal_counter = count;
@@ -54,9 +55,9 @@ int sem_down(sem_t sem)
 	/* if a thread tries to call down on a 0 semaphore, put it in the block_threads queue
 	 * and block it */
 	if(sem->internal_counter == 0){
-		
-		queue_enqueue(sem->blocked_threads, blocked_thread);
-		/*we would have to take the blocked_thread from some queue - maybe running queue */
+
+		/* enque the currently running thread on the waiting list*/
+		queue_enqueue(sem->blocked_threads, uthread_current());
 
 		/* block the thread */
 		uthread_block();
@@ -77,7 +78,8 @@ int sem_up(sem_t sem)
 	/* if the waiting list is not empty, release resource and increment internal count */
 	if(queue_length(sem->blocked_threads) > 0) {
 		sem->internal_counter++;
-		uthread_unblock();
+		queue_dequeue(sem->blocked_threads, (void **)&unbock_thread);
+		uthread_unblock(unbock_thread);
 		
 	}
 	return 0;
