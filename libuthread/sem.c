@@ -7,13 +7,13 @@
 #include "private.h"
 
 struct semaphore {
-	/*the internal counter of the semaphore */
-	size_t internal_counter;
+	size_t internal_counter; /* the internal counter of the semaphore */
 	/* queue to store threads that get blocked when trying to call down on a busy semaphore */
 	/* the collection of threads in queue are those that are waiting for some resource to become available */
-	queue_t blocked_queue; /* queue of blocked threads */
+	queue_t blocked_queue;
 };
 
+/* global structure pointer */
 static struct uthread_tcb *blocked_thread; 
 
 /* this function creates a semaphore */
@@ -43,7 +43,7 @@ sem_t sem_create(size_t count)
 int sem_destroy(sem_t sem)
 {
 	printf("start sem_destroy()\n");
-	/* if sem is NULL or there are still threads in block_threads waiting on it, return -1*/
+	/* if sem is NULL or there are still threads in block_threads waiting on it, return -1 */
 	if(sem == NULL || queue_length(sem->blocked_queue) != 0) {
 		return -1;
 	}
@@ -67,7 +67,7 @@ int sem_down(sem_t sem)
 		return -1;
 	}
 
-	/* if current thread tries to call down() on a 0 semaphore, it is blocked and put in the blocked queue  */
+	/* if current thread tries to call down() on a 0 semaphore, it is blocked and put in the blocked queue */
 	if(sem->internal_counter == 0){
 		printf("enqueuing curr thread to blocked queue bc it called down() on a 0 semaphore\n");
 		queue_enqueue(sem->blocked_queue, blocked_thread);
@@ -76,7 +76,7 @@ int sem_down(sem_t sem)
 		printf("calling uthread_block()\n");
 		uthread_block();
 	}
-	/*otherwise, decrement the internal counter*/
+	/* otherwise, decrement the internal counter*/
 	else { 
 		printf("decrementing sem counter\n");
 		sem->internal_counter--;
@@ -85,11 +85,6 @@ int sem_down(sem_t sem)
 	return 0;
 }
 
-/* 
- * cause the count to increment 
- * if after the increment, count is <= 0, then there is still some blocked processes in the queue 
- * thus, one of them becomes dequeued and unblocked making it able to run again
- */
 int sem_up(sem_t sem)
 {
 	printf("start sem_up()\n");
@@ -99,12 +94,13 @@ int sem_up(sem_t sem)
 	}
 
 	/* if blocked queue is not empty, release resource and increment internal count */
-	if(queue_length(sem->blocked_queue) > 0) {
+	if(queue_length(sem->blocked_queue) != 0) {
 		sem->internal_counter++;
-		/* unblock the thread */
-		printf("dequeuing blocked thread fro blocked queue ()\n");
+		printf("dequeuing blocked thread from blocked queue ()\n");
 		queue_dequeue(sem->blocked_queue, (void **)&blocked_thread);
+
 		printf("calling uthread_unblocked()\n");
+		/* unblock the thread */
 		uthread_unblock(blocked_thread);
 	}
 	/* case in which there are no waiting threads in blocked queue */
