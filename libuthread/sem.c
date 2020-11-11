@@ -56,15 +56,17 @@ int sem_down(sem_t sem)
 	/* if a thread tries to call down on a 0 semaphore, put it in the block_threads queue
 	 * and block it */
 	if(sem->internal_counter == 0){
-
+		sem->internal_counter--;
 		/* enque the currently running thread on the waiting list*/
 		queue_enqueue(sem->blocked_threads, uthread_current());
 
 		/* block the thread */
 		uthread_block();
 	}
-	
+	else {
 		sem->internal_counter--;
+	}
+
 
 	return 0;
 }
