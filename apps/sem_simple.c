@@ -20,19 +20,16 @@ sem_t sem3;
 
 static void thread3(void *arg)
 {
-	printf("th3: before down(sem3)\n");
 	sem_down(sem3);		/* Wait for thread1 */
-	printf("*************************************thread3*********************************\n");
-	printf("th3: before up(sem3)\n");
+	printf("thread3\n");
 	sem_up(sem2);		/* Unblock thread2 */
 }
 
 static void thread2(void *arg)
 {
-	printf("th2: before down(sem2)\n");
+	
 	sem_down(sem2);		/* Wait for thread 3 */
-	printf("*************************thread2***********************************\n");
-	printf("th2: before up(sem3)\n");
+	printf("thread2\n");
 	sem_up(sem1);		/* Unblock thread1 */
 }
 
@@ -40,11 +37,9 @@ static void thread1(void *arg)
 {
 	uthread_create(thread2, NULL);
 	uthread_create(thread3, NULL);
-	printf("th1: before up(sem3)\n");
 	sem_up(sem3);		/* Unblock thread 3 */
-	printf("th1: before down(sem1)\n");
 	sem_down(sem1); 	/* Wait for thread 2 */
-	printf("************************thread1******************************************\n");
+	printf("thread1\n");
 }
 
 int main(void)

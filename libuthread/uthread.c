@@ -78,7 +78,7 @@ void uthread_yield(void)
         queue_enqueue(ready_queue, prev);
 
         /* now get the next available thread in the ready queue */
-       //printf("dequeue next available thread from READY queue \n");
+        //printf("dequeue next available thread from READY queue \n");
         queue_dequeue(ready_queue, (void**)&next);
 
         /* update the next available thread's state */
@@ -127,7 +127,7 @@ void uthread_exit(void)
         uthread_ctx_switch(&prev->u_context, &next->u_context);
     }
    // printf("this should not get printed.. right?\n");
-   // printf("end of uthread_exit()\n");
+    //printf("end of uthread_exit()\n");
 }
 
 /*
@@ -164,8 +164,8 @@ int uthread_create(uthread_func_t func, void *arg)
 
         /* put the new thread in queue */
         //printf("enqueue new thread to READY queue \n");
-        //queue_enqueue(ready_queue, new_thread);
-       // printf("end of uthread_create()\n");
+        queue_enqueue(ready_queue, new_thread);
+        //printf("end of uthread_create()\n");
         return 0;
     }
     /* if failed to initialize, return -1*/
@@ -214,7 +214,7 @@ int uthread_start(uthread_func_t func, void *arg)
     /* running thread ptr should be pointing to the same address as idle_thread_ptr */
     running_thread_ptr = &idle_thread;
 
-   // printf("creating new thread from func, arg\n");
+    //printf("creating new thread from func, arg\n");
     /* create a new thread with func and arg */
     uthread_create(func, arg);
     
@@ -285,7 +285,7 @@ void uthread_unblock(struct uthread_tcb *uthread)
 {
     //printf("start of uthread_unblock()\n");
     /* puts the unblocked thread back in the ready queue so it can be elected to run again */
-    //printf("enqueue the blocked thread back into the ready queue\n");
+   // printf("enqueue the blocked thread back into the ready queue\n");
     queue_enqueue(ready_queue, uthread);
-    //printf("end of uthread_unblock()\n");
+   // printf("end of uthread_unblock()\n");
 }
