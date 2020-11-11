@@ -67,8 +67,9 @@ int sem_down(sem_t sem)
 		return -1;
 	}
 
-	/* if current thread tries to call down() on a 0 semaphore, it is blocked and put in the blocked queue */
-	if(sem->internal_counter == 0){
+	/* if current thread tries to call down() on a 0 or negative semaphore, it is blocked and put in the blocked queue */
+	if(sem->internal_counter <= 0){
+		sem->internal_counter--;
 		printf("enqueuing curr thread to blocked queue bc it called down() on a 0 semaphore\n");
 		queue_enqueue(sem->blocked_queue, blocked_thread);
 
