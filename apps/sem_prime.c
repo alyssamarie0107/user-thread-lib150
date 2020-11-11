@@ -28,7 +28,6 @@ struct filter {
 	struct channel *left;
 	struct channel *right;
 	unsigned int prime;
-	pthread_t tid;
 	struct filter *next;
 };
 
@@ -74,6 +73,7 @@ static void filter(void *arg)
 	sem_destroy(f->left->produce);
 	sem_destroy(f->left->consume);
 	free(f->left);
+	free(f);
 }
 
 /* Consumer thread */
