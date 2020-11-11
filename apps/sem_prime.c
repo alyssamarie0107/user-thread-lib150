@@ -16,7 +16,7 @@
 #include <sem.h>
 #include <uthread.h>
 
-#define MAXPRIME 5
+#define MAXPRIME 1000
 
 struct channel {
 	int value;
@@ -36,6 +36,7 @@ static unsigned int max = MAXPRIME;
 /* Producer thread: produces all numbers, from 2 to max */
 static void source(void *arg)
 {
+
 	struct channel *c = (struct channel*) arg;
 	size_t i;
 
@@ -54,6 +55,7 @@ static void source(void *arg)
 /* Filter thread */
 static void filter(void *arg)
 {
+
 	struct filter *f = (struct filter*) arg;
 	int value;
 
@@ -79,6 +81,7 @@ static void filter(void *arg)
 /* Consumer thread */
 static void sink(void *arg)
 {
+
 	struct channel *init_p, *p;
 	int value;
 	struct filter *f_head = NULL;
@@ -92,10 +95,12 @@ static void sink(void *arg)
 	uthread_create(source, p);
 
 	while (1) {
+
 		struct filter *f;
 
 		sem_down(p->consume);
 		value = p->value;
+
 		sem_up(p->produce);
 
 		if (value == -1)

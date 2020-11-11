@@ -62,13 +62,13 @@ int sem_down(sem_t sem)
 
 		//unblock_thread = uthread_current();
 		//printf("blocked thread is: %d", unblock_thread->tcb_id);
-
+		sem->internal_counter--;
 		/* block the thread */
 		uthread_block();
 	}
-	//else { /*otherwise, decrement the internal counter*/
+	else { /*otherwise, decrement the internal counter*/
 		sem->internal_counter--;
-	//}
+	}
 	return 0;
 }
 
