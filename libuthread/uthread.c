@@ -1,4 +1,3 @@
-/* TODO Phase 2 */
 #include <assert.h>
 #include <signal.h>
 #include <stddef.h>
@@ -26,22 +25,19 @@ enum thread_state {
 
 /* global queue */
 static queue_t ready_queue;
-static queue_t running_queue;
+static queue_t zombie_queue;
 
-static int tcb_id[11] = {0,1,2,3,4,5,6,7,8,9};
-static int *i = tcb_id;
 /*
  * thread control block (TCB)
  * this structure holds information about the single thread 
  * stores the context of the thread (set of registers)
  * information about its stack (stack pointer)
- * information about the state of the thread (running, ready to run, or exited )
+ * information about the state of the thread (running, ready to run, or exited)
  */
 struct uthread_tcb {
 	uthread_ctx_t u_context; /* user-level thread context */
 	char *stack_ptr; /* pointer to thread stack */
 	int thread_state; /* stores the state of the thread */
-	int tcb_id;
 };
 
 /* structure pointers */
@@ -49,22 +45,14 @@ static struct uthread_tcb *prev;
 static struct uthread_tcb *next;
 static struct uthread_tcb *new_thread_ptr; /* ptr points to new thread's TCB */
 static struct uthread_tcb *idle_thread_ptr; /* ptr points to main thread's TCB */
-static struct uthread_tcb *current_thread_ptr = NULL; /* ptr points to the current thread's TCB */
-static 	struct uthread_tcb new_thread;
-void print_elem(void *data) {
-	struct uthread_tcb *a = (struct uthread_tcb*)data;
-	printf("id = %d ",a->tcb_id); 
-}
+static struct uthread_tcb *running_thread_ptr; /* ptr points to the current thread's TCB */
+static struct uthread_tcb *blocked_thread_ptr; /* ptr points to the current thread's TCB */
+static struct uthread_tcb *zombie_thread_ptr; /* ptr points to the current thread's TCB */
 
 /* get the currently running thread and return ptr of the current thread's TCB */
 struct uthread_tcb *uthread_current(void)
 {	
-	/* get the current thread by dequeuing it from queue */
-	queue_dequeue(running_queue, (void**)&current_thread_ptr);
-	printf("current_thread tcb_id = %d\n", current_thread_ptr->tcb_id);
-	/* however we don't want to actually remove it so put it back in queue */
-	queue_enqueue(running_queue, current_thread_ptr);
-	return current_thread_ptr;
+	return running_thread_ptr;
 }
 
 /*
@@ -74,44 +62,28 @@ struct uthread_tcb *uthread_current(void)
  */
 void uthread_yield(void)
 {
-	/* would suspend current thread and put it at the rear of the ready_queue */
-	/* called to ask the library's scheduler to pick and run the next available thread */
-	printf("*****************************************************************************\n");
-	printf("entered yield()\n");
-	printf("*****************************************************************************\n");
-
 	/* check if there are any threads in the queue */
-	if (queue_length(ready_queue) > 0 && queue_length(running_queue) > 0) {
-		/* dequeue the current running thread */
-		printf("yield: running_queue before deque: ");
-		queue_iterate(running_queue, print_elem);
-		queue_dequeue(running_queue, (void**)&prev);
-	
+	if (queue_length(ready_queue) > 0) {
 
+		/* assign prev to the current running thread */
+		prev = running_thread_ptr;
 
-		/* update its thread state */
+		/* update prev's thread state to be ready */
 		prev->thread_state = THREAD_READY;
 
 		/* insert this thread to the back of the queue */
-		//printf("enqueue curr running thread to READY queue \n");
+		printf("enqueue curr running thread to READY queue \n");
 		queue_enqueue(ready_queue, prev);
 
 		/* now get the next available thread in the ready queue */
-		//printf("dequeue next available thread from READY queue \n");
-		printf("\nyield: ready_queue before deque + prev:  ");
-		queue_iterate(ready_queue, print_elem);
+		printf("dequeue next available thread from READY queue \n");
 		queue_dequeue(ready_queue, (void**)&next);
 
-		/* insert next available thread in the ready queue */
-		//printf("enqueue next available thread to RUNNING queue \n");
-
-
-		/* update its thread state */
+		/* update the next available thread's state */
 		next->thread_state = THREAD_RUNNING;
-		queue_enqueue(running_queue, next);
-		printf("\nyield: running_queue after enqueue next:  ");
-		queue_iterate(running_queue, print_elem);
-		printf("\n");
+
+		/* this thread is now elected to be running so assign running_thread_ptr to this thread */
+		running_thread_ptr = next;
 
 		/* context switch */
 		uthread_ctx_switch(&prev->u_context, &next->u_context);
@@ -121,41 +93,38 @@ void uthread_yield(void)
 /* 
  * naive verison of uthread_yield () 
  * only difference is that we are not going to enqueue the current running thread to the back of ready queue 
- * 
 */
-
 void uthread_exit(void)
 {
-	printf("*****************************************************************************\n");
 	printf("start of uthread_exit()\n");
-	printf("*****************************************************************************\n");
+	zombie_queue = queue_create();
 
+	/* have the zombie thread pointer point to the current running thread */
+	zombie_thread_ptr = running_thread_ptr;
 
-	/* dequeue the current running thread */
-	//printf("dequeue curr running thread from RUNNING queue \n");
-	queue_dequeue(running_queue, (void**)&prev);
+	/* update zombie thread state */
+	zombie_thread_ptr->thread_state = THREAD_ZOMBIE;
 
-	/* update its thread state */
-	prev->thread_state = THREAD_ZOMBIE;
+	/* enqueue this thread to the zombie queue and then destroy it using queue_destroy defined in queue.c 
+	queue_enqueue(zombie_queue, zombie_thread_ptr);
+	queue_destroy(zombie_queue);
+	*/
 
-	/* now get the next available thread in the ready queue if it's not empty*/
-	//printf("dequeue next available thread from READY queue \n");
-	if(queue_length(ready_queue) != 0){
-		queue_dequeue(ready_queue, (void**)&next);
-	}
-
-
-	/* update its thread state */
-	next->thread_state = THREAD_RUNNING;
-
-	/* insert next available thread into running queue */
-	//printf("enqueue next available thread to RUNNING queue \n");
-	queue_enqueue(running_queue, next);
-
-	/* check if there are any next available threads in queue if so call yield */
+	/* now check if there are any next available threads in queue */
 	if (queue_length(ready_queue) > 0) {
-		uthread_yield();
+		/* if there are, get the next available thread so it can run */
+		queue_dequeue(ready_queue, (void**)&next);
+
+		/* update its thread state to be running */
+		next->thread_state = THREAD_RUNNING;
+
+		/* assign this thread to running thread ptr */
+		running_thread_ptr = next;
+
+		/* context switch */
+		uthread_ctx_switch(&zombie_thread_ptr->u_context, &next->u_context);
 	}
+	printf("this should not get printed.. right?\n");
 }
 
 /*
@@ -165,8 +134,8 @@ void uthread_exit(void)
 int uthread_create(uthread_func_t func, void *arg)
 {
 	printf("start of uthread_create()\n");
+	struct uthread_tcb new_thread;
 
-	new_thread_ptr = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 	/* allocate memory for stack for the new thread */
 	new_thread.stack_ptr = uthread_ctx_alloc_stack();
 
@@ -181,20 +150,13 @@ int uthread_create(uthread_func_t func, void *arg)
 	/* check if thread ctx was properly initialized */
 	if(ctx_init_status == 0) {	
 		/* set READY state for the newly created thread */
-		new_thread.thread_state = THREAD_READY;
-		i = i+1;
-		new_thread.tcb_id = *(i);
+		new_thread.thread_state = THREAD_READY; 
 		new_thread_ptr = &new_thread;
 
 		/* put the new thread in queue */
-		printf("tcb_id = %p\n", (void *)&new_thread_ptr->tcb_id);
-		printf("stack ptr = %p\n", new_thread_ptr->stack_ptr);
-		queue_enqueue(ready_queue, &new_thread);
-		//printf("end of uthread_create()\n");
-		printf("uthread_create: ready queue -> ");
-		queue_iterate(ready_queue, print_elem);
-		new_thread_ptr = NULL;
-		free(new_thread_ptr);
+		printf("enqueue new thread to READY queue \n");
+		queue_enqueue(ready_queue, new_thread_ptr);
+		printf("end of uthread_create()\n");
 		return 0;
 	}
 	/* if failed to initialize, return -1*/
@@ -219,9 +181,9 @@ int uthread_create(uthread_func_t func, void *arg)
  */
 int uthread_start(uthread_func_t func, void *arg)
 {
+
 	/* create the queues by calling the queue_create function from queue.c */
 	ready_queue = queue_create();
-	running_queue = queue_create();
 
 	/* create idle thread structure */
 	struct uthread_tcb idle_thread;
@@ -235,16 +197,17 @@ int uthread_start(uthread_func_t func, void *arg)
 	idle_thread.stack_ptr = idle_thread_ctx[0].uc_stack.ss_sp;
 	idle_thread.u_context = idle_thread_ctx[0];
 
-	/* register initial thread as a runing thread and enqueue it to the running queue */
+	/* register idle thread as a running thread */
 	idle_thread.thread_state = THREAD_RUNNING;
-	idle_thread.tcb_id = 0;
+
+
+	/* make the idle_thread_ptr point to the idle_thread address */
 	idle_thread_ptr = &idle_thread;
 	
-	//printf("enqueue idle thread to RUNNING queue \n");
-	queue_enqueue(running_queue, idle_thread_ptr);
-	//printf("enqueue complete \n");
+	/* running thread ptr should be pointing to the same address as idle_thread_ptr */
+	running_thread_ptr = idle_thread_ptr;
 
-	//printf("creating new thread from func, arg\n");
+	printf("creating new thread from func, arg\n");
 	/* create a new thread with func and arg */
 	uthread_create(func, arg);
 	
@@ -252,22 +215,20 @@ int uthread_start(uthread_func_t func, void *arg)
 	while (1) {
 		printf("entered while loop!\n");
 		/* when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
-		if(queue_length(ready_queue) == 0 && queue_length(running_queue) == 0) {
-			
-			/* destroy all the used queues before exiting*/
-			queue_destroy(ready_queue);
-			queue_destroy(running_queue);
-			//printf("entered empty ready queue\n");
+		if(queue_length(ready_queue) == 0) {
+			printf("entered empty ready queue\n");
 			return 0;
 		}
-		/* deal with threads that reached completion TCB 
+		/* deal with threads that reached completion TCB
 		else if(queue_length(zombie_queue) != 0){
+			printf("destroying zombie thread");
+			printf("queue_destroy() called");
+			queue_destroy(zombie_queue);
 		}
 		*/
 		/* simply yields to next available thread */
 		else {
-			//printf("entered else uthread_yield statement\n");
-			
+			printf("entered else uthread_yield statement\n");
 			uthread_yield();
 		}
 	}
@@ -275,74 +236,41 @@ int uthread_start(uthread_func_t func, void *arg)
 }
 
 
-void uthread_block(void) {
-	/* general idea - check if there are still threads in running queue 
-	 * change the status to THREAD_WAIT
-	 * to block it, do a context switch with the thread next available in the queue */
-
-		printf("*****************************************************************************\n");
-		printf("entered uthread_block()\n");
-		printf("*****************************************************************************\n");
-
-
-		//if (queue_length(ready_queue) > 0) {
-			/* dequeue the current running thread */
-			//printf("dequeue curr running thread from RUNNING queue \n");
-			//printf("running_queue before deque:   ");
-			//queue_iterate(running_queue, print_elem);
-			//queue_dequeue(running_queue, (void**)&prev);
-
-			/* update its thread state */
-			//prev->thread_state = THREAD_BLOCKED;
-
-			/* insert this thread to the back of the queue */
-			//printf("enqueue curr running thread to READY queue \n");
-			//queue_enqueue(blocked_queue, prev);
-
-			/* now get the next available thread in the ready queue */
-			//printf("dequeue next available thread from READY queue \n");
-			//printf("ready_queue before deque:   ");
-			//queue_iterate(ready_queue, print_elem);
-			//queue_dequeue(ready_queue, (void**)&next);
-
-			/* insert next available thread in the ready queue */
-			//printf("enqueue next available thread to RUNNING queue \n");
-			//queue_enqueue(running_queue, next);
-
-			/* update its thread state */
-			//next->thread_state = THREAD_RUNNING;
-
-			/* context switch */
-			uthread_yield();
-			//uthread_ctx_switch(&prev->u_context, &next->u_context);
-		//}
-}
-
-/*
- * uthread_unblock - Unblock thread
- * @uthread: TCB of thread to unblock
- */
-void uthread_unblock(struct uthread_tcb *uthread) {
-	/* the unblocked thread goes at the end of the ready queue */
-	
-	printf("*****************************************************************************\n");
-	printf("entered uthread_unblock(): \n");
-	printf("*****************************************************************************\n");
-
-	queue_enqueue(ready_queue, uthread);
-	
-}
-
-/****************************TODO:PHASE 2/3*************************
- * very similar to yield, except for yield you would put yourself back of the ready queue bc just yielding and you want to run again
- * with block you wouldnt put yourself back in the ready queue because you are blocked
- * other than that it is very similar to queue 
- * where does a thread go when it is in the block state though?
- * 		- semphore will have a queue of blocked threads that are waiting on it 
  void uthread_block(void)
 {
+	printf("entered uthread_block()\n");
+
+	/* have the zombie thread pointer point to the current running thread */
+     blocked_thread_ptr = running_thread_ptr;
+
+	/* update zombie thread state */
+	blocked_thread_ptr->thread_state = THREAD_BLOCKED;
+
+	/* ? where should i put this thread ? */
+
+	/* now check if there are any next available threads in queue */
+	if (queue_length(ready_queue) > 0) {
+		/* if there are, get the next available thread so it can run */
+	  queue_dequeue(ready_queue, (void**)&next);
+
+		/* update its thread state to be running */
+	next->thread_state = THREAD_RUNNING;
+
+		/* assign this thread to running thread ptr */
+	running_thread_ptr = next;
+
+		/* context switch */
+		uthread_ctx_switch(&blocked_thread_ptr->u_context, &next->u_context);
+	}
+	//printf("this should not get printed.. right?\n");
+	//uthread_yield();
 }
+
 void uthread_unblock(struct uthread_tcb *uthread)
 {
+	printf("start of uthread_unblock()\n");
+	/* puts the unblocked thread back in the ready queue so it can be elected to run again */
+	printf("enqueue the blocked thread back into the ready queue\n");
+	queue_enqueue(ready_queue, uthread);
+	printf("end of uthread_unblock()\n");
 }
- ********************************************************************/

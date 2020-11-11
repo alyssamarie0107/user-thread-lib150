@@ -4,9 +4,9 @@ programs := \
 	uthread_hello.x \
 	uthread_yield.x \
 	sem_simple.x \
-	#sem_buffer.x \
-	#sem_count.x \
-	#sem_prime.x
+	sem_buffer.x \
+	sem_count.x \
+	sem_prime.x
 
 # User-level thread library
 UTHREADLIB := libuthread
