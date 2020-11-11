@@ -122,12 +122,13 @@ void uthread_exit(void)
         /* assign zombie thread to prev pointer */
         prev = zombie_thread_ptr;
 
+		/* immediately free zombie pointer since it has reached completion */
+		free(zombie_thread_ptr);
+
         /* context switch */
         printf("context switch\n");
         uthread_ctx_switch(&prev->u_context, &next->u_context);
     }
-    printf("this should not get printed.. right?\n");
-    printf("end of uthread_exit()\n");
 }
 
 /*
@@ -136,9 +137,9 @@ void uthread_exit(void)
  */
 int uthread_create(uthread_func_t func, void *arg)
 {
-    printf("start of uthread_create()\n");
+    //printf("start of uthread_create()\n");
 
-	/* allocate memory for new thread ptr */
+	/* allocate memory for a TCB every time a thread is created. The TCB contains whatever you need for each thread */
     struct uthread_tcb *new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 
 	/* check if the stack was allocated; return -1 if it wasn't */
@@ -227,15 +228,7 @@ int uthread_start(uthread_func_t func, void *arg)
             queue_destroy(ready_queue);
             return 0;
         }
-        /* deal with threads that reached completion TCB
-        else if(queue_length(zombie_queue) != 0){
-            printf("destroying zombie thread");
-            printf("queue_destroy() called");
-            queue_destroy(zombie_queue);
-            free(zombie_thread_ptr);
-        }
-        */
-        /* simply yields to next available thread */
+        /* simply yields to next available thread if still threads in ready queue */
         else {
             printf("entered else uthread_yield statement\n");
             uthread_yield();
@@ -277,8 +270,6 @@ int uthread_start(uthread_func_t func, void *arg)
         printf("context switch\n");
         uthread_ctx_switch(&blocked_thread_ptr->u_context, &next->u_context);
     }
-    printf("this should not get printed.. right?\n");
-    printf("end of uthread_block()\n");
 }  
 
 void uthread_unblock(struct uthread_tcb *uthread)
