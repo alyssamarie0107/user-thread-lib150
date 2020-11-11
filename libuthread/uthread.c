@@ -37,7 +37,8 @@ static struct uthread_tcb *next;
  */
 static struct uthread_tcb *running_thread_ptr; /* ptr points to the currently running thread's TCB */
 static struct uthread_tcb *blocked_thread_ptr; /* ptr points to the blocked thread's TCB */
-
+ 	/* create idle thread structure */
+static  struct uthread_tcb idle_thread;
 /*
  * thread control block (TCB)
  * this structure holds information about the single thread 
@@ -115,16 +116,21 @@ void uthread_exit(void)
 
         /* update its thread state to be running */
         next->thread_state = THREAD_RUNNING;
+		printf("exit: next = %p\n", next);
 
         /* assign this thread to running thread ptr */
         running_thread_ptr = next;
 
         /* assign zombie thread to prev pointer */
         prev = zombie_thread_ptr;
+		printf("exit: prev = %p\n", prev);
 
         /* context switch */
         //printf("context switch\n");
-        uthread_ctx_switch(&prev->u_context, &next->u_context);
+
+    	uthread_ctx_switch(&prev->u_context, &next->u_context);
+		uthread_ctx_destroy_stack(zombie_thread_ptr->stack_ptr);
+
     }
    // printf("this should not get printed.. right?\n");
     //printf("end of uthread_exit()\n");
@@ -193,8 +199,7 @@ int uthread_start(uthread_func_t func, void *arg)
 	/* create the queues by calling the queue_create function from queue.c */
     ready_queue = queue_create();
 
-	/* create idle thread structure */
-    struct uthread_tcb idle_thread;
+
 
     /* context object (for the "main" thread)*/
     uthread_ctx_t idle_thread_ctx[1];
@@ -224,6 +229,7 @@ int uthread_start(uthread_func_t func, void *arg)
         /* when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
         if(queue_length(ready_queue) == 0) {
             //printf("NO MORE THREADS IN READY QUEUE, JOB IS DONE!\n");
+			free(running_thread_ptr);
             queue_destroy(ready_queue);
             return 0;
         }
