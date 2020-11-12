@@ -62,12 +62,12 @@ void preempt_start(void)
 	/* 
 	 * sigaction(int signum, const struct sigaction *act, struct sigaction *oldact);
 	 * 
+	 * signum = specifies the signal and can be any valid signal except SIGKILL and SIGSTOP
 	 * new arg is used to set up a new action for the signal signum 
 	 * old arg is used to return info about the action previously associated with this signal
 	 * 
 	 * same basic effect as signal: to specify how a signal show be handled by the process
 	 * however, sigaction offers more control, at the expense of more complexity 
-	 * signum = specifies the signal and can be any valid signal except SIGKILL and SIGSTOP
 	 * 
 	 * return value from sigaction is zero if it succeeds, and -1 on failure
 	 */
@@ -90,8 +90,10 @@ void preempt_start(void)
 	 * setitimer() sets the value of an interval timer 
 	 * an interval timer is a timer which sends a signal after each repition (interval) of time 
 	 * which argument indicates what kind of time is being controlled 
+	 * 
 	 * ITIMER_VIRTUAL: marking process virtual time 
 	 * process virtual time is the amount of time spent while executing in the process, can be thought of as a CPU timer 
+	 * 
 	 * SIGVTALRM signal is generate after each interval of time 
 	 * count down whenever this process is executing
 	 * return value is 0 on success and -1 on failure
@@ -117,10 +119,10 @@ void preempt_stop(void)
 	int act_restored = sigaction(SIGVTALRM, &old_act, NULL);
 	/* if and when the user's handler returns normally, the original mask is restored */
 	if (act_restored == 0){
-		printf("singal handler restored successfully");
+		printf("singal handler restored successfully\n");
 	}
 	else {
-		perror("sigaction() failed restoring signal handler");
+		perror("sigaction() failed restoring signal handler\n");
 	}
 
 	/* 
