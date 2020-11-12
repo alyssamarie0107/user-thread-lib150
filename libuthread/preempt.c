@@ -99,16 +99,6 @@ void preempt_start(void)
 	 * count down whenever this process is executing
 	 * return value is 0 on success and -1 on failure
 	 */
-
-	/*
-	 * Piazza: "what I understand is that sigaction() will somehow give back the action 
-	 * previously associated with the signal and we can call sigaction() 
-	 * on the old action to restore the previous signal action. I'm not sure if it's correct. 
-	 * If so, does it mean that the signal handler and the alarm also be removed?"
-	 * Professor's response: "Your understanding is correct. Try it!
-	 * sigaction will only affect the signal handler. the alarm must be removed via another function 
-	 * (but the principle is the same)"
-	 */
 	if (setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer) == 0){
 		timer_restored = 1;
 	}
@@ -123,6 +113,15 @@ void preempt_stop(void)
 	/* if and when the user's handler returns normally, the original mask is restored */
 	if (act_restored == 1){
 		/* calling sigaction on the old action to restore the previous singal action */
+		/*
+	    * Piazza: "what I understand is that sigaction() will somehow give back the action 
+	 	* previously associated with the signal and we can call sigaction() 
+	 	* on the old action to restore the previous signal action. I'm not sure if it's correct. 
+	 	* If so, does it mean that the signal handler and the alarm also be removed?"
+	 	* Professor's response: "Your understanding is correct. Try it!
+	 	* sigaction will only affect the signal handler. the alarm must be removed via another function 
+	 	* (but the principle is the same)"
+	 	*/
 		sigaction(SIGVTALRM, &old_act, NULL);
 	}
 	else {
