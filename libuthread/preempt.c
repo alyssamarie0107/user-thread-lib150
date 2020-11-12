@@ -10,12 +10,6 @@
 #include "private.h"
 #include "uthread.h"
 
-/*
- * Frequency of preemption
- * 100Hz is 100 times per second
- * alarm is fired every 1/100 second (convert to ms) -> 10ms
- */
-
 sigset_t signal_set; /* used to represent a signal set */
 
 static struct sigaction new_act, old_act; /* used to change the action taken by a process on receipt of a specific signal */
@@ -23,7 +17,6 @@ static struct itimerval new_timer, old_timer; /* struct used to specify when a t
 
 /* signal handler that receives alarm signals and forcefully yields the current running thread */
 void alarm_handler() {
-	//printf("in alarm handler going to call uthread_yield()\n");
 	uthread_yield();
 }
 
@@ -56,7 +49,6 @@ void preempt_start(void)
 	if(sigaddset(&signal_set, SIGVTALRM) == -1) {
    		perror("sigaddset");
 	}
-	/* sa_mask specifies a mask of signals which should be blocked during execution of the signal handler */
 	new_act.sa_flags = 0; /* sa_flags specifies a set of glags which modify the behavior of the signal */
 
 	/* 
