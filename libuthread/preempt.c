@@ -23,7 +23,7 @@ static struct itimerval new_timer, old_timer; /* struct used to specify when a t
 
 /* signal handler that receives alarm signals and forcefully yields the current running thread */
 void alarm_handler() {
-	printf("in alarm handler going to call uthread_yield()\n");
+	//printf("in alarm handler going to call uthread_yield()\n");
 	uthread_yield();
 }
 
@@ -53,8 +53,8 @@ void preempt_start(void)
 	sigemptyset(&new_act.sa_mask); /* sigemptyset() initializes the signal set given by set to empty */
 	sigemptyset(&old_act.sa_mask);
 	sigemptyset (&signal_set);
-	if(sigaddset(&signal_set, SIGVTALRM) == 0) {
-   		printf("sigaddset successfully added for SIGVTALRM\n");
+	if(sigaddset(&signal_set, SIGVTALRM) == -1) {
+   		perror("sigaddset");
 	}
 	/* sa_mask specifies a mask of signals which should be blocked during execution of the signal handler */
 	new_act.sa_flags = 0; /* sa_flags specifies a set of glags which modify the behavior of the signal */
@@ -118,11 +118,8 @@ void preempt_stop(void)
 	/* restoring previous signal handler by calling sigaction on the old action to restore the previous singal action */
 	int act_restored = sigaction(SIGVTALRM, &old_act, NULL);
 	/* if and when the user's handler returns normally, the original mask is restored */
-	if (act_restored == 0){
-		printf("singal handler restored successfully\n");
-	}
-	else {
-		perror("sigaction() failed restoring signal handler\n");
+	if (act_restored == -1){
+		perror("sigaction restoration failure");
 	}
 
 	/* 
@@ -130,10 +127,7 @@ void preempt_stop(void)
 	 * according to piazza it is the same principle as restoring the signal handler 
 	 */
 	int timer_restored = setitimer(ITIMER_VIRTUAL, &old_timer, NULL); /* sets the timer specified as according to old_timer, which is the prev timer saved */
-	if (timer_restored == 0){
-		printf("timer restored successfully\n");
-	}
-	else {
-		perror("setitimer() failed restoring signal handler\n");
+	if (timer_restored == -1){
+		perror("setitimer restoration failure");
 	}
 }
