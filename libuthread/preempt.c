@@ -71,7 +71,7 @@ void preempt_start(void)
 	 * 
 	 * return value from sigaction is zero if it succeeds, and -1 on failure
 	 */
-	sigaction(SIGVTALRM, &new_act, &old_act);
+	sigaction(SIGVTALRM, &new_act, &old_act); /* sigaction will save the value of the existing signal hanlder in the struct old_act */
 
 	/* configure the timer to expire after 10ms */
 	/* current timer value */
@@ -98,7 +98,7 @@ void preempt_start(void)
 	 * count down whenever this process is executing
 	 * return value is 0 on success and -1 on failure
 	 */
-	setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer);
+	setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer); /* setitimer will save the value of the existing timer in the struct old_timer */
 }
 
 /*
@@ -129,7 +129,7 @@ void preempt_stop(void)
 	 * restoring prev timer configuration 
 	 * according to piazza it is the same principle as restoring the signal handler 
 	 */
-	int timer_restored = setitimer(ITIMER_VIRTUAL, &old_timer, NULL);
+	int timer_restored = setitimer(ITIMER_VIRTUAL, &old_timer, NULL); /* sets the timer specified as according to old_timer, which is the prev timer saved */
 	if (timer_restored == 0){
 		printf("timer restored successfully\n");
 	}
