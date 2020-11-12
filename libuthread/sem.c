@@ -59,9 +59,6 @@ int sem_down(sem_t sem)
 
 		/* enque the currently running thread on the waiting list*/
 		queue_enqueue(sem->blocked_threads, uthread_current());
-
-		//unblock_thread = uthread_current();
-		//printf("blocked thread is: %d", unblock_thread->tcb_id);
 		sem->internal_counter--;
 		/* block the thread */
 		uthread_block();
@@ -84,7 +81,10 @@ int sem_up(sem_t sem)
 	sem->internal_counter++;
 
 	if(queue_length(sem->blocked_threads) > 0) {
+		/*CRITICAL SECTION BECASE IT MODIFIES UNBLOCK_THREAD */
+		preempt_disable();
 		queue_dequeue(sem->blocked_threads, (void **)&unblock_thread);
+		preempt_enable();
 		uthread_unblock(unblock_thread);
 		
 	}
