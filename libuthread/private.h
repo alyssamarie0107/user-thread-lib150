@@ -11,7 +11,6 @@
  * Private context API
  */
 #include <ucontext.h>
-
 #include "uthread.h"
 
 /*
@@ -23,6 +22,7 @@
  * Such a context is initialized for the first time when creating a thread with
  * uthread_ctx_init(). Once initialized, it can be switched to with
  * uthread_ctx_switch().
+ * ucontext_t is defined in ucontext.h
  */
 typedef ucontext_t uthread_ctx_t;
 
