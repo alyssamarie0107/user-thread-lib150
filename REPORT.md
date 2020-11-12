@@ -14,14 +14,30 @@ In the implementation of queue, we used a single linked list. We chose this over
 an array to meet the given constraint that all queue operations must have a
 time complexity of O(1) for all operations except the delete and iterate
 operations, both of which require the traversal of the whole or part of the
-list. We created our own comprehensive tester, built on a given skeleton, which
-tests the proper behavior of each function of the queue with different data
-types.
+queue. The container is stored in a user defined variable of type `struct queue`
+which has pointers to the beginning of the queue (`front`), its end (`rear`) and
+a pointer that assists in iterating through the queue (`current`). Moreover,
+these pointers are of `struct node` type which is composed of a `void *data`
+pointer, which holds the content of the queue and accepts any data type due to
+the nature of `void`, and a pointer of `struct node` type that points to the
+next element in the queue. While our implementation of queue has some of the
+standard member functions such as `enqueue`, `dequeue`, constructor `create` and
+destructor `destroy`, it does not support functions such as `front`, `back`,
+`swap` etc.. It also, has `length` function which servers as both `size` and 
+`empty` (depending on the usage) that other libraries have as memebr functions.
+Additionaly, it supports a feature `iterate` which supports forward iteration
+through all elements of the queue while calling a callback function on each
+element. Lastly, unlike many ohter libraries, it supports a `delete` method
+which supports deletion of an element regardless of its position in the queue.
+To test our container, we created our own comprehensive tester, built on a given 
+skeleton, which tests the proper behavior of each function of the queue by
+printing its elements after an enqueue, deque or deletion and by using `assert`
+to test the return values of each operations.
 
 ## Uthread API
-
+ 
 ## Semaphore API
-
+Work in progress...
 ## Preemption
 
 ## Challenges/Limitations
