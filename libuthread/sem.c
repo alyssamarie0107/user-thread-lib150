@@ -59,14 +59,20 @@ int sem_destroy(sem_t sem)
 int sem_down(sem_t sem)
 {
 	printf("start sem_down()\n");
-	/* assign the current running thread from uthread.c to blocked thread */
-	blocked_thread = uthread_current();
 
 	/* return -1 if semaphore is not allocated */
 	if(sem == NULL) {
 		return -1;
 	}
 
+	/* CRITICAL SECTION : modifying global struct ptr -> blocked_thread */
+	preempt_disable(); /* disable forced interrupts */
+
+	blocked_thread = uthread_current(); /* assign the current running thread from uthread.c to blocked thread */
+
+	/* END OF CRITICAL SECTION */
+	preempt_enable(); /* done modifying global variables, thus enable preemption */
+	
 	/* if current thread tries to call down() on a 0 or negative semaphore, it is blocked and put in the blocked queue */
 	if(sem->internal_counter <= 0){
 		sem->internal_counter--;
