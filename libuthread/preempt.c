@@ -54,7 +54,7 @@ void preempt_start(void)
 	sigemptyset(&old_act.sa_mask);
 	sigemptyset (&signal_set);
 	if(sigaddset(&signal_set, SIGVTALRM) == -1) {
-   		return -1;
+   		perror("sigaddset");
 	}
 	/* sa_mask specifies a mask of signals which should be blocked during execution of the signal handler */
 	new_act.sa_flags = 0; /* sa_flags specifies a set of glags which modify the behavior of the signal */
@@ -119,7 +119,7 @@ void preempt_stop(void)
 	int act_restored = sigaction(SIGVTALRM, &old_act, NULL);
 	/* if and when the user's handler returns normally, the original mask is restored */
 	if (act_restored == -1){
-		return -1;
+		perror("sigaction restoration failure");
 	}
 
 	/* 
@@ -128,6 +128,6 @@ void preempt_stop(void)
 	 */
 	int timer_restored = setitimer(ITIMER_VIRTUAL, &old_timer, NULL); /* sets the timer specified as according to old_timer, which is the prev timer saved */
 	if (timer_restored == -1){
-		return -1;
+		perror("setitimer restoration failure");
 	}
 }
