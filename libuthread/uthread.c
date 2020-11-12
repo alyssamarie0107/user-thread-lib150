@@ -226,6 +226,7 @@ int uthread_start(uthread_func_t func, void *arg)
         if(queue_length(ready_queue) == 0) {
             printf("NO MORE THREADS IN READY QUEUE, JOB IS DONE!\n");
             queue_destroy(ready_queue);
+			preempt_stop();
             return 0;
         }
         /* simply yields to next available thread if still threads in ready queue */
