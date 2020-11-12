@@ -79,7 +79,7 @@ int queue_destroy(queue_t queue)
 	if(queue->front != NULL || queue->queue_size != 0) {
 		return -1;
 	}
-	/* deallocated the queue object too */
+	/* deallocated the queue object */
 	free(queue);
 	return 0;
 } 

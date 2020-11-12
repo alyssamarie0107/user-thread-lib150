@@ -52,6 +52,8 @@ void uthread_yield(void)
     /* check if there are any threads in the queue */
     if (queue_length(ready_queue) != 0) {
 
+        /* THIS IS CRITICAL SECTION BECAUSE IT CHANGES PREV, READY_QUEUE AND RUNNING THREAD */
+        preempt_disable();
         /* assign prev to the current running thread */
         prev = running_thread_ptr;
 
@@ -70,6 +72,7 @@ void uthread_yield(void)
 
         /* this thread is now elected to be running so assign running_thread_ptr to this thread */
         running_thread_ptr = next;
+        preempt_enable();
 
         /* context switch */
         uthread_ctx_switch(&prev->u_context, &next->u_context);
@@ -94,6 +97,8 @@ void uthread_exit(void)
 
     /* now check if there are any next available threads in queue */
     if (queue_length(ready_queue) != 0) {
+    /*CRITICAL SECTION BECAUSE IT MODIFIES RADY_QUEUE, PREV, NEXT AND RUNNING_THREAD_PTR*/
+    preempt_disable();
         /* if there are, get the next available thread so it can run */
         queue_dequeue(ready_queue, (void**)&next);
 
@@ -105,7 +110,7 @@ void uthread_exit(void)
 
         /* assign zombie thread to prev pointer */
         prev = zombie_thread_ptr;
-
+    preempt_enable();
 		/* immediately free zombie pointer since it has reached completion */
 		free(zombie_thread_ptr);
 
@@ -145,8 +150,11 @@ int uthread_create(uthread_func_t func, void *arg)
         /* set READY state for the newly created thread */
         new_thread->thread_state = THREAD_READY; 
 
+    /* CRITICL SECTION BECAUSE IT CHANGES READY_QUEUE */
+    preempt_disable();
         /* put the new thread in queue */
         queue_enqueue(ready_queue, new_thread);
+    preempt_enable();
         return 0;
     }
     /* if failed to initialize, return -1*/
@@ -155,6 +163,41 @@ int uthread_create(uthread_func_t func, void *arg)
     }
 }
 
+ void uthread_block(void)
+{
+    /*CRITICAL SECTION BECAUSE IT MODIFIES BLOCKED_THREAD_PTR, READY_QUEUE, RUNNING THREAD_PTR AND NEXT */
+    preempt_disable();
+    /* have the blocked thread pointer point to the current running thread */
+    blocked_thread_ptr = running_thread_ptr;
+
+    /* update blocked thread state */
+    blocked_thread_ptr->thread_state = THREAD_BLOCKED;
+
+    /* now check if there are any next available threads in queue */
+    if (queue_length(ready_queue) != 0) {
+        /* if there are, get the next available thread so it can run */
+        queue_dequeue(ready_queue, (void**)&next);
+
+        /* update its thread state to be running */
+        next->thread_state = THREAD_RUNNING;
+
+        /* assign this thread to running thread ptr */
+        running_thread_ptr = next;
+    preempt_enable();
+
+        /* context switch */
+        uthread_ctx_switch(&blocked_thread_ptr->u_context, &next->u_context);
+    }
+}  
+
+void uthread_unblock(struct uthread_tcb *uthread)
+{
+    /* CRITICAL SECTION BECAUSE IT MODIFIED QUEUE_READY */
+    preempt_disable();
+    /* puts the unblocked thread back in the ready queue so it can be elected to run again */
+    queue_enqueue(ready_queue, uthread);
+    preempt_enable();
+}
 
 int uthread_start(uthread_func_t func, void *arg)
 {
@@ -185,6 +228,9 @@ int uthread_start(uthread_func_t func, void *arg)
     /* create a new thread with func and arg */
     uthread_create(func, arg);
     
+    /* SHOULD WE PUT PREEMPT START HERE???? */
+    preempt_start();
+
     /* executes an infinite loop - idle loop */
     while (1) {
 
@@ -204,34 +250,3 @@ int uthread_start(uthread_func_t func, void *arg)
 }
 
 
- void uthread_block(void)
-{
-
-    /* have the blocked thread pointer point to the current running thread */
-    blocked_thread_ptr = running_thread_ptr;
-
-    /* update blocked thread state */
-    blocked_thread_ptr->thread_state = THREAD_BLOCKED;
-
-    /* now check if there are any next available threads in queue */
-    if (queue_length(ready_queue) != 0) {
-        /* if there are, get the next available thread so it can run */
-        queue_dequeue(ready_queue, (void**)&next);
-
-        /* update its thread state to be running */
-        next->thread_state = THREAD_RUNNING;
-
-        /* assign this thread to running thread ptr */
-        running_thread_ptr = next;
-
-        /* context switch */
-        uthread_ctx_switch(&blocked_thread_ptr->u_context, &next->u_context);
-    }
-}  
-
-void uthread_unblock(struct uthread_tcb *uthread)
-{
-
-    /* puts the unblocked thread back in the ready queue so it can be elected to run again */
-    queue_enqueue(ready_queue, uthread);
-}
