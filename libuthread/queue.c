@@ -41,39 +41,18 @@ int queue_enqueue(queue_t queue, void *data)
 		return -1;
 	}
 
-    // If queue is empty, set the front and rear node of queue to the new node
+    /* if queue is empty, set the front and rear node of queue to the new node */
     if (queue->front == NULL && queue->rear == NULL) { 
         queue->front = queue->rear = new_node;
-
 		queue->queue_size++;
-		/* printing the queue's content */
-		struct node *temp = queue->front;
-		printf("queue content: ");
-		for(int i = 0; i < queue->queue_size; i++) {
-			printf("%d ",*(int *)temp->data);
-			temp = temp->next;
-		}
-		printf("\n");
 		return 0;
     } 
 	/* if queue is not empty */	
 	else {
 		/* the rear node's next will be set to new_node's address & rear node point to the new_node that has been created*/
 		queue->rear = queue->rear->next = new_node; 
-		//printf("queue_rear: %d\n", *(int *)queue->rear->data);
-
 		queue->queue_size++;
-
-		/* printing the queue's content */
-		struct node *temp = queue->front;
-		printf("queue content: ");
-		for(int i = 0; i < queue->queue_size; i++) {
-			printf("%d ",*(int *)temp->data);
-			temp = temp->next;
-		}
-		printf("\n");
 	}
-
 	return 0;
 }
 
@@ -90,16 +69,7 @@ int queue_destroy(queue_t queue)
 		queue->queue_size--;
 		free(queue->current);
 	}
-
-	/* printing the queue's content */
-	struct node *temp = queue->front;
-	printf("queue content: ");
-	for(int i = 0; i < queue->queue_size; i++) {
-		printf("%d ",*(int *)temp->data);
-		temp = temp->next;
-	}
-	printf("\n");
-    
+   
 	/*if after destroying everything queue is still not empty, return -1 */
 	if(queue->front != NULL || queue->queue_size != 0) {
 		return -1;
@@ -115,6 +85,7 @@ int queue_dequeue(queue_t queue, void **data)
 	if(queue->front == NULL && queue->rear == NULL) {
 		return -1;
 	}
+
 	/* check if the queue only has one data entry */
 	if (queue->front == queue->rear) {
 		queue->front = queue->rear = NULL;
@@ -123,20 +94,11 @@ int queue_dequeue(queue_t queue, void **data)
 	else {
 		queue->front = queue->front->next;
 	}
+
 	/* remove the oldest item of queue @queue and assign this item (the value of a pointer) to @data. */
 	*data = queue->current->data;
 	free(queue->current);
 	queue->queue_size--;
-
-	/* printing the queue's content */
-	struct node *temp = queue->front;
-	printf("queue content: ");
-	for(int i = 0; i < queue->queue_size; i++) {
-		printf("%d ",*(int *)temp->data);
-		temp = temp->next;
-	}
-	printf("\n");
-	
 	return 0;
 }
 
@@ -159,15 +121,6 @@ int queue_delete(queue_t queue, void *data)
     if(queue->front->data == data) {
         queue->front = queue->front->next;
 		queue->queue_size--;
-		
-		/* printing the queue's content */
-		struct node *temp = queue->front;
-		printf("queue content after deleting front: ");
-		for(int i = 0; i < queue->queue_size; i++) {
-			printf("%d ",*(int *)temp->data);
-			temp = temp->next;
-		}
-		printf("\n");
         return 0;
     }
 
@@ -189,32 +142,13 @@ int queue_delete(queue_t queue, void *data)
 		queue->rear = previous_node;
 		queue->queue_size--;
         free(temp_node);
-		
-		/* printing the queue's content */
-		struct node *temp = queue->front;
-		printf("queue content after deleting end: ");
-		for(int i = 0; i < queue->queue_size; i++) {
-			printf("%d ",*(int *)temp->data);
-			temp = temp->next;
-		}
-		printf("\n");
     }
+	/*if you got here, the element is neither at front or rear */
     else {
-		/*if you got here, the element is neither at front or rear */
-
 		/* make previous's next skip the node that will be deleted and point to the next one*/
         previous_node->next = temp_node->next;
 		queue->queue_size--;
         free(temp_node);
-		
-		/* printing the queue's content */
-		struct node *temp = queue->front;
-		printf("queue content after deleting an element: ");
-		for(int i = 0; i < queue->queue_size; i++) {
-			printf("%d ",*(int *)temp->data);
-			temp = temp->next;
-		}
-		printf("\n");
     }
     return 0;
 }
@@ -230,10 +164,8 @@ int queue_iterate(queue_t queue, queue_func_t func) {
 		/* iterate throught the queue and apply the given callback function on each item in queue */
 		for(int i = 0; i < queue->queue_size; i++) {
 			func(queue->current->data);
-			printf("%d ",*(int *)queue->current->data);
 			queue->current = queue->current->next;
 		}
-		printf("\n");
 	}
 	return 0;
 }
