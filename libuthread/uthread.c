@@ -30,13 +30,7 @@ static queue_t ready_queue;
 /* global structure pointers */
 static struct uthread_tcb *prev;
 static struct uthread_tcb *next;
-/* 
- * don't have a running queue because running queue will only have 1 thread in it, so doesn't make sense 
- * running thread should also not be in the ready queue, bc it is running
- * rather, lets just have a global running thread ptr and have it point to the running thread
- */
 static struct uthread_tcb *running_thread_ptr; /* ptr points to the currently running thread's TCB */
-static struct uthread_tcb *blocked_thread_ptr; /* ptr points to the blocked thread's TCB */
 
 /*
  * thread control block (TCB)
@@ -67,7 +61,10 @@ void uthread_yield(void)
     /* check if there are any threads in the queue */
     if (queue_length(ready_queue) != 0) {
 
-        /* assign prev to the current running thread */
+		/* CRITICAL SECTION : modifying global queue and struct ptrs -> prev, next, running_thread_ptr */
+		preempt_disable(); /* disable forced interrupts */
+
+		/* assign prev to the current running thread */
         prev = running_thread_ptr;
 
         /* update prev's thread state to be ready */
@@ -86,6 +83,9 @@ void uthread_yield(void)
 
         /* this thread is now elected to be running so assign running_thread_ptr to this thread */
         running_thread_ptr = next;
+
+		/* END OF CRITICAL SECTION */
+		preempt_enable(); /* done modifying global variables, thus enable preemption */
 
         /* context switch */
         uthread_ctx_switch(&prev->u_context, &next->u_context);
@@ -110,7 +110,10 @@ void uthread_exit(void)
 
     /* now check if there are any next available threads in queue */
     if (queue_length(ready_queue) != 0) {
-        /* if there are, get the next available thread so it can run */
+		/* CRITICAL SECTION : modifying global queue and struct ptrs -> prev, next, running_thread_ptr */
+		preempt_disable(); /* disable forced interrupts */
+
+        /* if there are threads in ready queue, get the next available thread so it can run */
         queue_dequeue(ready_queue, (void**)&next);
 
         /* update its thread state to be running */
@@ -121,6 +124,9 @@ void uthread_exit(void)
 
         /* assign zombie thread to prev pointer */
         prev = zombie_thread_ptr;
+
+		/* END OF CRITICAL SECTION */
+		preempt_enable(); /* done modifying global variables, thus enable preemption */
 
 		/* immediately free zombie pointer since it has reached completion */
 		free(zombie_thread_ptr);
@@ -137,7 +143,7 @@ void uthread_exit(void)
  */
 int uthread_create(uthread_func_t func, void *arg)
 {
-    //printf("start of uthread_create()\n");
+    printf("start of uthread_create()\n");
 
 	/* allocate memory for a TCB every time a thread is created. The TCB contains whatever you need for each thread */
     struct uthread_tcb *new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
@@ -158,14 +164,23 @@ int uthread_create(uthread_func_t func, void *arg)
     /* initialize the context of the new thread */
     int ctx_init_status = uthread_ctx_init(&new_thread->u_context,new_thread->stack_ptr, func, arg);
     
+	/* preempt_start() should be called when the uthread library is initializing and sets up preemption */
+	preempt_start();
+
     /* check if thread ctx was properly initialized */
     if(ctx_init_status == 0) {  
         /* set READY state for the newly created thread */
         new_thread->thread_state = THREAD_READY; 
 
-        /* put the new thread in queue */
         printf("enqueue new thread to READY queue \n");
-        queue_enqueue(ready_queue, new_thread);
+
+		/* CRITICAL SECTION : modifying global queue  */
+		preempt_disable(); /* disable forced interrupts */
+
+        queue_enqueue(ready_queue, new_thread); /* put the new thread in queue */
+		
+		/* END OF CRITICAL SECTION */
+		preempt_enable(); /* done modifying global variables, thus enable preemption */
         printf("end of uthread_create()\n");
         return 0;
     }
@@ -209,11 +224,17 @@ int uthread_start(uthread_func_t func, void *arg)
     /* register idle thread as a running thread */
     idle_thread.thread_state = THREAD_RUNNING;
 
+	/* CRITICAL SECTION : modifying global struct ptr -> running_thread_ptr */
+	preempt_disable(); /* disable forced interrupts */
+
     /* allocate memory for running thread ptr */
     running_thread_ptr = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
     
     /* running thread ptr should be pointing to the same address as idle_thread_ptr */
     running_thread_ptr = &idle_thread;
+
+	/* END OF CRITICAL SECTION */
+	preempt_enable(); /* done modifying global variables, thus enable preemption */
 
     printf("creating new thread from func, arg\n");
     /* create a new thread with func and arg */
@@ -224,9 +245,9 @@ int uthread_start(uthread_func_t func, void *arg)
         printf("entered while loop!\n");
         /* when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
         if(queue_length(ready_queue) == 0) {
+			preempt_stop();
             printf("NO MORE THREADS IN READY QUEUE, JOB IS DONE!\n");
             queue_destroy(ready_queue);
-			preempt_stop();
             return 0;
         }
         /* simply yields to next available thread if still threads in ready queue */
@@ -250,6 +271,8 @@ int uthread_start(uthread_func_t func, void *arg)
 {
     printf("entered uthread_block()\n");
 
+	static struct uthread_tcb *blocked_thread_ptr; /* ptr points to the blocked thread's TCB */
+
     /* have the blocked thread pointer point to the current running thread */
     blocked_thread_ptr = running_thread_ptr;
 
@@ -258,6 +281,9 @@ int uthread_start(uthread_func_t func, void *arg)
 
     /* now check if there are any next available threads in queue */
     if (queue_length(ready_queue) != 0) {
+		/* CRITICAL SECTION : modifying global queue and struct ptrs -> next, running_thread_ptr */
+		preempt_disable(); /* disable forced interrupts */
+
         /* if there are, get the next available thread so it can run */
         queue_dequeue(ready_queue, (void**)&next);
 
@@ -266,6 +292,9 @@ int uthread_start(uthread_func_t func, void *arg)
 
         /* assign this thread to running thread ptr */
         running_thread_ptr = next;
+		
+		/* END OF CRITICAL SECTION */
+		preempt_enable(); /* done modifying global variables, thus enable preemption */
 
         /* context switch */
         printf("context switch\n");
@@ -276,8 +305,17 @@ int uthread_start(uthread_func_t func, void *arg)
 void uthread_unblock(struct uthread_tcb *uthread)
 {
     printf("start of uthread_unblock()\n");
-    /* puts the unblocked thread back in the ready queue so it can be elected to run again */
+    
     printf("enqueue the blocked thread back into the ready queue\n");
+
+	/* CRITICAL SECTION : modifying global queue */
+	preempt_disable(); /* disable forced interrupts */
+
+	/* puts the unblocked thread back in the ready queue so it can be elected to run again */
     queue_enqueue(ready_queue, uthread);
-    printf("end of uthread_unblock()\n");
+
+	/* END OF CRITICAL SECTION */
+	preempt_enable(); /* done modifying global variables, thus enable preemption */
+    
+	printf("end of uthread_unblock()\n");
 }
