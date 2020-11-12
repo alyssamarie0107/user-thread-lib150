@@ -1,9 +1,10 @@
 # Target library
 # library archive must be the default target of Makefile
 default_target := libuthread.a
-targets := libuthread.a queue_tester uthread sem
-objs1 := queue_tester.o queue.o 
-all_objs:= queue_tester.o queue.o uthread.o context.o preempt.o sem.o
+targets := libuthread.a queue_tester uthread sem test_preempt
+objs1 := queue_tester.o queue.o
+objs2 := test_preempt.o uthread.o preempt.o 
+all_objs:= queue_tester.o queue.o uthread.o context.o preempt.o sem.o test_preempt.o
 #all_objs:= queue_tester.o queue.o
 
 CC	:= gcc
@@ -19,6 +20,10 @@ deps := $(patsubst %.o, %.d, $(all_objs))
 -include $(deps)
 
 queue_tester: $(objs1)
+	@echo "CC $@"
+	$(Q)$(CC) $(CFLAGS) -o $@ $^
+
+test_preempt: $(all_objs)
 	@echo "CC $@"
 	$(Q)$(CC) $(CFLAGS) -o $@ $^
 
