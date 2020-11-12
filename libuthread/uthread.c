@@ -71,11 +71,9 @@ void uthread_yield(void)
         prev->thread_state = THREAD_READY;
 
         /* insert this thread to the ready queue */
-        printf("enqueue curr running thread to READY queue \n");
         queue_enqueue(ready_queue, prev);
 
         /* now get the next available thread in the ready queue */
-        printf("dequeue next available thread from READY queue \n");
         queue_dequeue(ready_queue, (void**)&next);
 
         /* update the next available thread's state */
@@ -98,8 +96,6 @@ void uthread_yield(void)
 */
 void uthread_exit(void)
 {
-    printf("start of uthread_exit()\n");
-
     struct uthread_tcb *zombie_thread_ptr; /* ptr points to the zombie thread's TCB */
 
     /* have the zombie thread pointer point to the current running thread */
@@ -132,7 +128,6 @@ void uthread_exit(void)
 		free(zombie_thread_ptr);
 
         /* context switch */
-        printf("context switch\n");
         uthread_ctx_switch(&prev->u_context, &next->u_context);
     }
 }
@@ -143,8 +138,6 @@ void uthread_exit(void)
  */
 int uthread_create(uthread_func_t func, void *arg)
 {
-    printf("start of uthread_create()\n");
-
 	/* allocate memory for a TCB every time a thread is created. The TCB contains whatever you need for each thread */
     struct uthread_tcb *new_thread = (struct uthread_tcb*)malloc(sizeof(struct uthread_tcb));
 
@@ -172,8 +165,6 @@ int uthread_create(uthread_func_t func, void *arg)
         /* set READY state for the newly created thread */
         new_thread->thread_state = THREAD_READY; 
 
-        printf("enqueue new thread to READY queue \n");
-
 		/* CRITICAL SECTION : modifying global queue  */
 		preempt_disable(); /* disable forced interrupts */
 
@@ -181,7 +172,6 @@ int uthread_create(uthread_func_t func, void *arg)
 		
 		/* END OF CRITICAL SECTION */
 		preempt_enable(); /* done modifying global variables, thus enable preemption */
-        printf("end of uthread_create()\n");
         return 0;
     }
     /* if failed to initialize, return -1*/
@@ -236,23 +226,19 @@ int uthread_start(uthread_func_t func, void *arg)
 	/* END OF CRITICAL SECTION */
 	preempt_enable(); /* done modifying global variables, thus enable preemption */
 
-    printf("creating new thread from func, arg\n");
     /* create a new thread with func and arg */
     uthread_create(func, arg);
     
     /* executes an infinite loop - idle loop */
     while (1) {
-        printf("entered while loop!\n");
         /* when there are no more idle threads(threads which are ready to run) left in queue, stop the idle loop and returns  */
         if(queue_length(ready_queue) == 0) {
 			preempt_stop();
-            printf("NO MORE THREADS IN READY QUEUE, JOB IS DONE!\n");
             queue_destroy(ready_queue);
             return 0;
         }
         /* simply yields to next available thread if still threads in ready queue */
         else {
-            printf("entered else uthread_yield statement\n");
             uthread_yield();
         }
     }
@@ -269,8 +255,6 @@ int uthread_start(uthread_func_t func, void *arg)
  */
  void uthread_block(void)
 {
-    printf("entered uthread_block()\n");
-
 	static struct uthread_tcb *blocked_thread_ptr; /* ptr points to the blocked thread's TCB */
 
     /* have the blocked thread pointer point to the current running thread */
@@ -297,17 +281,12 @@ int uthread_start(uthread_func_t func, void *arg)
 		preempt_enable(); /* done modifying global variables, thus enable preemption */
 
         /* context switch */
-        printf("context switch\n");
         uthread_ctx_switch(&blocked_thread_ptr->u_context, &next->u_context);
     }
 }  
 
 void uthread_unblock(struct uthread_tcb *uthread)
 {
-    printf("start of uthread_unblock()\n");
-    
-    printf("enqueue the blocked thread back into the ready queue\n");
-
 	/* CRITICAL SECTION : modifying global queue */
 	preempt_disable(); /* disable forced interrupts */
 
@@ -316,6 +295,4 @@ void uthread_unblock(struct uthread_tcb *uthread)
 
 	/* END OF CRITICAL SECTION */
 	preempt_enable(); /* done modifying global variables, thus enable preemption */
-    
-	printf("end of uthread_unblock()\n");
 }
