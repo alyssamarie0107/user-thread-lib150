@@ -17,7 +17,7 @@ struct queue {
 
 queue_t queue_create(void)
 {	
-	queue_t new_queue = (struct queue*)malloc(sizeof(struct queue)); /* allocating memory for a new queue*/
+	queue_t new_queue = (struct queue*)malloc(sizeof(struct queue)); /* allocating memory for a new queue */
 	new_queue->front = new_queue->rear = NULL; /* want the new queue to be empty, thus initializing front and rear ptrs to NULL */
 	new_queue->queue_size = 0;
 
