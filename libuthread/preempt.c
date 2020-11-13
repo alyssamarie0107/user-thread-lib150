@@ -12,7 +12,7 @@
 
 sigset_t signal_set; /* used to represent a signal set */
 
-static struct sigaction new_act, old_act;	  /* used to change the action taken by a process on receipt of a specific signal */
+static struct sigaction new_act, old_act; /* used to change the action taken by a process on receipt of a specific signal */
 static struct itimerval new_timer, old_timer; /* struct used to specify when a timer should expire */
 
 /* signal handler that receives alarm signals and forcefully yields the current running thread */
@@ -38,7 +38,7 @@ void preempt_start(void)
 {
 	/* set up the structure to specify the new action */
 	new_act.sa_handler = alarm_handler; /* specifies the action to be associated with signum, assign it pointer to handling function */
-	sigemptyset(&new_act.sa_mask);		/* sigemptyset() initializes the signal set given by set to empty */
+	sigemptyset(&new_act.sa_mask); /* sigemptyset() initializes the signal set given by set to empty */
 	sigemptyset(&old_act.sa_mask);
 	sigemptyset(&signal_set);
 	if (sigaddset(&signal_set, SIGVTALRM) == -1)
