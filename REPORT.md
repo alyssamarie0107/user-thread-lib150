@@ -37,7 +37,28 @@ to test the return values of each operations.
 ## Uthread API
  
 ## Semaphore API
-Work in progress...
+In our implementation of semaphore we used a counted semaphore of user defined
+type `struct semaphore` (or `sem_t`). This structure contains an internal counter 
+that keeps track of the available resources and gets updated when a thread is 
+taking over or releases a shared resource. It also has a waiting list in which 
+threads, that try to take a resource when the internal counter is 0 or less, are 
+blocked from execution and are placed into it. Once a new resource becomes 
+available,the first thread in the waiting list will get elected to resume its 
+execution. That is why our waiting list is of `queue_t` type since we need it to 
+function in a FIFO manner. In terms of methods, our semaphore has a constructor 
+(`sem_create`) and a destructor (`sem_destroy`) in which our semaphore object gets 
+initialized and deallocated respectively. `sem_down` is the method which blocks
+the execution of a thread that tries to get a resource that does not exist (the
+internal counter is zero) and puts it on its own waitlist. If there are 
+resoruces still, it decrements its internal counter. `sem_up` increments the 
+internal counter when a resoruce becomes available and removes from the waitlist
+the first thread to resume its execution. To accomplish its purposes fully, our
+semaphore needed a way to communicate with out thread API; it does that by 
+calling `uthread_block` in `sem_down` when it blocks thread execution or by
+using a `struct uthread_tcb` pointer that stores the first thread in the waiting
+list and is fed as argument to `uthread_block` to resume its execution.
+
+
 ## Preemption
 
 ## Challenges/Limitations
