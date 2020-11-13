@@ -37,7 +37,7 @@ to test the return values of each operations.
 In our uthread implementation, we first declared the possible states a thread
 can have using `enum` so that the thread states can be set to numerical values.
 We also have a structure that represents a TCB. Inside the `struct` we have the
-user-level thread context, pointer to a thread stack, and a threat state defined
+user-level thread context, pointer to a thread stack, and a thread state defined
 in the stucture. We also have a global queue called `ready_queue` and have three
 global structure pointers called `prev`, `next`, and `running_thread_ptr`. 
 
@@ -45,9 +45,8 @@ In order to start the uthread_library, `uthread_start();` must be called. In
 this function we create the ready queue, and register the single execution flow
 of the application as the idle thread by defining a context object for this
 thread and initializing it. After this, we assign the `running_thread_ptr` to
-the idle thread we just initialized. Once this occurs, we call
-`uthread_create();` to create a new thread out of the function and argument
-passed as parameter. 
+the idle thread we just initialized. Next, we call `uthread_create();` to create
+a new thread out of the function and argument passed as parameter. 
 
 In `uthread_create();` we allocate a pointer of type `struct uthread_tcb`. We
 then allocate memory for this new thread's stack by calling
