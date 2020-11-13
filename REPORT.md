@@ -53,17 +53,17 @@ then allocate memory for this new thread's stack by calling
 `uthread_ctx_alloc_stack();` and assign this new thread's stack pointer to it.
 Additionally, we initilize the context of the new thread by utilizing
 `uthread_ctx_init();`. Once the thread has been sucessfully created and
-initialized, we enqueue it in our ready queue by using `queue_enqueue();`.
+initialized, we enqueued it in our ready queue by using `queue_enqueue();`.
 Returning back to `uthread_start();` we also define an infinite loop that checks
-if the ready queue has anymore threads in it. If it doesn't it returns 0,
+if the ready queue has anymore threads in it. If it doesn't, it returns 0,
 otherwise, it calls `uthread_yield();`
 
 `uthread_yield();`, `uthread_exit();`, and `uthread_block();` are very similar,
-thus our implementations to all these look very similar. In `uthread_yield();`
-we assign the structure pointer `prev` to `running_thread_ptr` and update its
-state to ready. We then enqueue `prev` in the ready queue and dequeue the next
-available thread using `queue_dequeue();`. This thread is now assigned to
-`running_thread_ptr` and we do a context switch.
+thus our implementations to all these look fairly identical. In
+`uthread_yield();` we assign the structure pointer `prev` to
+`running_thread_ptr` and update its state to ready. We then enqueue `prev` in
+the ready queue and dequeue the next available thread using `queue_dequeue();`.
+This thread is now assigned to `running_thread_ptr` and we do a context switch.
 ```
 uthread_ctx_switch(&prev->u_context, &next->u_context);
 ```
