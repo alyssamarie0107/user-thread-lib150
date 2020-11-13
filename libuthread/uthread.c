@@ -126,6 +126,8 @@ void uthread_exit(void)
 		/* END OF CRITICAL SECTION */
 		preempt_enable(); /* done modifying global variables, thus enable preemption */
 
+		/* deallocate the stack of the zombie thread*/
+		uthread_ctx_destroy_stack(zombie_thread_ptr->stack_ptr);
 		/* immediately free zombie pointer since it has reached completion */
 		free(zombie_thread_ptr);
 

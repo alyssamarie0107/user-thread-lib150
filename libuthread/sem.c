@@ -98,19 +98,17 @@ int sem_up(sem_t sem)
 		return -1;
 	}
 
-	/* if blocked queue is not empty, release resource and increment internal count */
+	/* increment internal counter */		
+	sem->internal_counter++;
+
+	/* if blocked queue is not empty, release resource*/
 	if (queue_length(sem->blocked_queue) != 0)
 	{
-		sem->internal_counter++;
 		queue_dequeue(sem->blocked_queue, (void **)&blocked_thread);
 
 		/* unblock the thread */
 		uthread_unblock(blocked_thread);
 	}
-	/* case in which there are no waiting threads in blocked queue */
-	else
-	{
-		sem->internal_counter++;
-	}
+
 	return 0;
 }

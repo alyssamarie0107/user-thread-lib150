@@ -83,6 +83,8 @@ int queue_destroy(queue_t queue)
 	{
 		return -1;
 	}
+	/* deallocate the queue object */
+	free(queue);
 	return 0;
 }
 

@@ -6,7 +6,8 @@ In this project we implemented a user-level thread library to support
 multithreading within the same process. As a prerequisite to the thread library
 we implemented a FIFO container (queue) which we used in subsequent steps.
 Moreover, we implemented a semaphore for synchronization, and ultimately, we
-implemented preemption to avoid unwanted uncooperative thread behavior.
+implemented preemption to avoid unwanted uncooperative thread behavior while
+sharing resources.
 
 ## Queue API
 In the implementation of queue, we used a single linked list. We chose this over
@@ -60,7 +61,7 @@ to resume its execution.
 
 ## Preemption API
 The purpose of the preemption API is to forcefully suspend a thread even during
-long CPU burts by the use of a timer interrupt. The timer we implement in our
+long CPU bursts by the use of a timer interrupt. The timer we implement in our
 API is configured in the function, `preempt_start();` The struct `itimerval` was
 what we used to make our timer fire an alarm a hundred times per second (i.e 100
 Hz or 10ms). 
@@ -71,16 +72,16 @@ is the primary means for setting our alarm.
 setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer); 
 ```
 Since we wanted to count the processor time used by a thread, we made a virtual
-timer, in which we specify by using`ITIMER_VIRTUAL`as the first argument of
+timer, in which we specify using `ITIMER_VIRTUAL` as the first argument of
 `setitimer();`. The last two arguments `setitimer();` takes are essentially a
 new timer, which is the timer we configured using `itimerval`, and a old timer.
 The old timer argument can in fact be declared as `NULL`, however, we avoided
 doing this for the purpose of restoring the timer, which will be explained later
 on.
 
-Additionally, in `preempt_start();`, we install a alarm handler to take care of
-the signal that the timer sends. The way we set up the structure to specify the
-action of handling the signal as well as how we make use of the `sigaction();`
+Additionally, in `preempt_start();`, we installed an alarm handler to take care 
+of the signal that the timer sends. The way we set up the structure is to specify 
+the action of handling the signal as well as how we make use of the `sigaction();`
 function is shown below. 
 ```
 new_act.sa_handler = alarm_handler;
@@ -91,16 +92,16 @@ sigaction(SIGVTALRM, &new_act, &old_act);
 ```
 The first line in the above code block indicates the action to be associated
 with the signal. `new_act.sa_handler` is assigned a function pointer and the
-only thing in our `alarm_handler();` function is `uthread_yield();`, which again
+only thing in our `alarm_handler();` function is `uthread_yield();`; which again
 puts the currently running thread to the back of the ready queue so that the
 next available thread in the queue gets elected to run on the processor.
 `sigemptyset()` initializes the signal, while `sa_flags`specifies a set of flags
 which modify the behavior of the signal. The first argument in `sigaction();` is
 `SIGVTALRM`, which indicates expiration of a timer that measures CPU time used
 by the thread. In a similar manner to `setitimer();`, `sigaction();` also takes
-in a new arg that is used to set up a new action for the signal as well as a old
-arg that is used to return info about the action previously associated with the
-signal, if it is not declared. Likewise, the third argument can be `NULL`, but
+in a new arg that is used to set up a new action for the signal as well as an 
+old arg that is used to return info about the action previously associated with 
+the signal, if it is not declared. Likewise, the third argument can be `NULL`, but
 we use old_act to achieve restoring the signal handler. 
 
 Restoring the previous action and timer configuration is mostly done in our
@@ -131,21 +132,21 @@ C.
 
 Another challenge we faced was understanding the concepts and functionalities of
 threads and integrating our developed knowledge to implement the thread library
-functions. It tooks us quite awhile to obtain a solid understanding of what
+functions. It tooks us quite a while to obtain a solid understanding of what
 should be accomplished and how. Oftentimes, we were stuck and didn't even know
 where to start once. However, going back and re-reading the lecture slides,
 asking questions on Piazza, meeting on Zoom with each other almost every day,
 and attending office hours helped us tremendously with getting started. 
 
-Once we were able to get started and finally write some code, we also quite
+Once we were able to get started and finally wrote some code, we also quite
 frequently ran into bugs, thus having to put our basic debugging skills to use.
-We utilized writing the exepected outcome, printing debugging, and gdb. 
+We utilized writing the exepected outcome, print debugging, and gdb. 
 
 Lastly, though having predefined function helps in many ways, it also imposes
 limitations in how one should go about the implementation, for it restricts a
 bit of the freedom a developer gets in implementation choices. However, it is
 understandable that regardless of the academia or the industry, the design
-choices might be enforced oftenten, thus we appreciate the good practice to be
+choices might be enforced often, thus we appreciate the good practice to be
 able to follow guidelines.
 
 ## Cited Resources

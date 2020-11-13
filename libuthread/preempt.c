@@ -10,6 +10,7 @@
 #include "private.h"
 #include "uthread.h"
 
+#define TIMER_FREQ 10000 /*10 ms or 100 HZ */
 sigset_t signal_set; /* used to represent a signal set */
 
 static struct sigaction new_act, old_act; /* used to change the action taken by a process on receipt of a specific signal */
@@ -43,7 +44,7 @@ void preempt_start(void)
 	sigemptyset(&signal_set);
 	if (sigaddset(&signal_set, SIGVTALRM) == -1)
 	{
-		perror("sigaddset");
+		perror("Sigaddset failed to add SIGVTALRM to signal_set");
 	}
 	new_act.sa_flags = 0; /* sa_flags specifies a set of flags which modify the behavior of the signal */
 
@@ -53,10 +54,10 @@ void preempt_start(void)
 	/* configure the timer to expire after 10ms */
 	/* current timer value */
 	new_timer.it_value.tv_sec = 0;
-	new_timer.it_value.tv_usec = 10000; /* 10ms = 10000 microseconds */
+	new_timer.it_value.tv_usec = TIMER_FREQ; /* 10ms = 10000 microseconds */
 	/* ... and every 10ms after that */
 	new_timer.it_interval.tv_sec = 0; /* it_interval: current timer interval */
-	new_timer.it_interval.tv_usec = 10000;
+	new_timer.it_interval.tv_usec = TIMER_FREQ;
 
 	setitimer(ITIMER_VIRTUAL, &new_timer, &old_timer); /* setitimer will save the value of the existing timer in the struct old_timer */
 }
